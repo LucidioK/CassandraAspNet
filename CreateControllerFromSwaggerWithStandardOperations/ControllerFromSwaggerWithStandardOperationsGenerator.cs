@@ -108,6 +108,8 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             {
                 CreateController(path.Key, path.Value);
             }
+            CreateCSFile(this.csProjDirectory, "Constants.cs", Constants.ConstantsCode);
+            CreateCSFile(this.csProjDirectory, "AppSettings.cs", Constants.AppSettingsCode);
         }
 
         private void ReinjectSecurity(SwaggerRoot swaggerRoot, JsonArray security)
@@ -133,12 +135,13 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             replacementParameters.ProducesResponseAttributes = CreateProducesResponseAttributes(pathItem);
             PopulatePrimaryKeyNameAndType(pathItem);
             PopulateFilterParameters(pathItem);
-            var controllerFilePath = Path.Combine(this.controllersDirectory, replacementParameters.EntityName + "Controller.cs");
-            var controllerFilePathRelative = controllersDirectory.Substring(this.csProjDirectory.Length);
-            if (controllerFilePathRelative.StartsWith('\\')) controllerFilePathRelative = controllerFilePathRelative.Substring(1);
-            File.WriteAllText(controllerFilePath, RunReplacements(Constants.ControllerCode, replacementParameters));
-            var constantsFilePath = Path.Combine(this.csProjDirectory, "Constants.cs");
-            File.WriteAllText(constantsFilePath, RunReplacements(Constants.ConstantsCode, replacementParameters));
+            CreateCSFile(this.controllersDirectory, replacementParameters.EntityName + "Controller.cs", Constants.ControllerCode);
+        }
+
+        private void CreateCSFile(string directory, string fileName, string code)
+        {
+            var constantsFilePath = Path.Combine(directory, fileName);
+            File.WriteAllText(constantsFilePath, RunReplacements(code, replacementParameters));
         }
 
         private void PopulateFilterParameters(PathItem pathItem)

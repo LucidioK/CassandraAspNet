@@ -6,6 +6,15 @@ namespace CreateControllerFromSwaggerWithStandardOperations
 {
     class Constants
     {
+        public static string AppSettingsCode = @"
+namespace ^NamespaceBase^
+{
+    public class AppSettings
+    {
+ 
+    }
+}
+";
         public static string ConstantsCode = @"
 namespace ^NamespaceBase^
 {

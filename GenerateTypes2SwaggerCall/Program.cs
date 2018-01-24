@@ -47,7 +47,7 @@ namespace GenerateTypes2SwaggerCall
                 classes.Append(classes.Length > 0 ? "," : "");
                 classes.Append(type.FullName);
             }
-            var command = $"nswag types2swagger /Assembly:{args[1]} /ClassNames:{classes}  /DefaultPropertyNameHandling:CamelCase /DefaultEnumHandling:String /Output:{args[0]}Swagger.json";
+            var command = $"nswag types2swagger /Assembly:{args[1]} /ClassNames:{classes}  /DefaultPropertyNameHandling:CamelCase /DefaultEnumHandling:String /Output:swaggerBase.json";
             File.WriteAllText(args[2], command);
             Utils.Utils.WriteLineGreen("GenerateTypes2SwaggerCall end");
         }

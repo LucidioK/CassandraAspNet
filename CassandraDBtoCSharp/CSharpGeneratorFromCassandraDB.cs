@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Utils;
 
 namespace CassandraDBtoCSharp
 {
@@ -22,13 +23,21 @@ namespace CassandraDBtoCSharp
 <Project Sdk='Microsoft.NET.Sdk'>
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>App</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include='CassandraCSharpDriver' Version='3.4.0.1' />
-    <PackageReference Include='Newtonsoft.Json' Version='10.0.1' />
-    <PackageReference Include='Microsoft.AspNetCore.All' Version='2.0.3' />
-    <PackageReference Include='Microsoft.Extensions.DependencyInjection.Abstractions' Version='2.0.0' />
-    <PackageReference Include = 'Microsoft.VisualStudio.Web.CodeGeneration.Design' Version='2.0.1' />
+    <PackageReference Include='CassandraCSharpDriver'                                 Version='3.4.0.1' />
+    <PackageReference Include='Newtonsoft.Json'                                       Version='10.0.1'  />
+    <PackageReference Include='Microsoft.AspNetCore.All'                              Version='2.0.3'   />
+    <PackageReference Include='Microsoft.Extensions.DependencyInjection.Abstractions' Version='2.0.0'   />
+    <PackageReference Include='Microsoft.VisualStudio.Web.CodeGeneration.Design'      Version='2.0.1'   />
+    <PackageReference Include='Ninject'                                               Version='3.3.4'   />
+    <PackageReference Include='Swashbuckle.AspNetCore'                                Version='1.1.0'   />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update='swagger.json'>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>
 ";
@@ -99,6 +108,7 @@ namespace CassandraDBtoCSharp
                         log.Add($" Table {tableDef.Name}, class {className}, column {tableColumn.Name}: DON'T KNOW HOW TO HANDLE TYPE {tableColumn.TypeCode}");
                     }
                 }
+                PopulateIsIndexField(columnDescriptions, tableDef);
                 this.CreateCSFile(
                     className,
                     properties,
@@ -115,6 +125,19 @@ namespace CassandraDBtoCSharp
             this.CreateUdtTypeInitializerClassIfNeeded();
             this.CreateTypeDescriptionJson();
             File.WriteAllText(Path.Combine(this.outputDirectory, this.keySpaceName + ".csproj"), this.csproj);
+        }
+
+        private void PopulateIsIndexField(List<ColumnDescription> columnDescriptions, TableMetadata tableDef)
+        {
+            foreach (var index in tableDef.Indexes)
+            {
+                var indexedPropertyName = Utils.Utils.CSharpifyName(index.Value.Target);
+                var indexedProperty = columnDescriptions.FirstOrDefault(c => c.CSharpName == indexedPropertyName);
+                if (indexedProperty != null)
+                {
+                    indexedProperty.IsIndex = true;
+                }
+            }
         }
 
         private static void AddProperty(

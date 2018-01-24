@@ -229,16 +229,16 @@ namespace GenerateSwaggerStandardOperations
                     }
                 );
             }
-            var clusteringKeys = typeDescription.ColumnDescriptions.Where(c => c.IsClusteringKey).ToList();
-            foreach (var clusteringKey in clusteringKeys)
+            var indexes = typeDescription.ColumnDescriptions.Where(c => c.IsClusteringKey || c.IsIndex).ToList();
+            foreach (var index in indexes)
             {
                 var parameter = new Parameter
                 {
-                    Name = Utils.Utils.CamelCase(clusteringKey.CamelCaseName),
+                    Name = Utils.Utils.CamelCase(index.CamelCaseName),
                     In = ParameterIn.Query,
                     Required = false,
-                    Type = GetParameterType(clusteringKey.CassandraType),
-                    Format = GetParameterFormat(clusteringKey.CassandraType)
+                    Type = GetParameterType(index.CassandraType),
+                    Format = GetParameterFormat(index.CassandraType)
                 };
                 parameters.Add(parameter);
             }

@@ -10,6 +10,7 @@ namespace Utils
         public string CamelCaseName;
         public bool IsPartitionKey = false;
         public bool IsClusteringKey = false;
+        public bool IsIndex = false;
         public string CassandraType;
         public string CSharpType;
         public string CSharpName;

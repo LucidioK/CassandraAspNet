@@ -33,7 +33,7 @@ GenerateSwaggerStandardOperations KeyNameSpace SwaggerFromNSwagJson typeDescript
 Injects GET request formats into Swagger file generated from NSwag.
 
 Example:
-    CreateCassandraDBFromCode pse c:\\temp\\classes\\pseSwagger.json c:\\temp\\classes\\typeDescriptions.json c:\\temp\\classes\\pseSwaggerWithOps.json  https://somesite.com/oauth/authorize/?client_id=CLIENT-ID&redirect_uri=REDIRECT-URI&response_type=token
+    CreateCassandraDBFromCode pse c:\\temp\\classes\\swaggerBase.json c:\\temp\\classes\\typeDescriptions.json c:\\temp\\classes\\swagger.json  https://somesite.com/oauth/authorize/?client_id=CLIENT-ID&redirect_uri=REDIRECT-URI&response_type=token
 ");
 
         }
