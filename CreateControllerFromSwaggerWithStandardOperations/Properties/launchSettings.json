@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CreateControllerFromSwaggerWithStandardOperations": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Temp\\classes3\\pseSwaggerWithOperations.json \"Contact Points = localhost; Port = 9042\" 1 24 c:\\Temp\\classes3\\pse.csproj   c:\\Temp\\classes3\\typeDescriptions.json"
+    }
+  }
+}

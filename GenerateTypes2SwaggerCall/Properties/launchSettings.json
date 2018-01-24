@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GenerateTypes2SwaggerCall": {
+      "commandName": "Project",
+      "commandLineArgs": "pse C:\\temp\\classes\\bin\\x64\\Debug\\netcoreapp2.0\\win10-x64\\publish\\pse.dll C:\\temp\\classes\\Types2Swagger.cmd"
+    }
+  }
+}

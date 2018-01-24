@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GenerateSwaggerStandardOperations": {
+      "commandName": "Project",
+      "commandLineArgs": "pse c:\\Temp\\classes3\\pseSwagger.json c:\\Temp\\classes3\\typeDescriptions.json c:\\Temp\\classes3\\pseSwaggerWithOperations.json \"https://somesite.com/oauth/authorize\""
+    }
+  }
+}

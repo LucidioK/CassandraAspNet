@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CassandraDBtoCSharp": {
+      "commandName": "Project",
+      "commandLineArgs": "\"Contact Points = localhost; Port = 9042\" pse c:\\temp\\classes"
+    }
+  }
+}
