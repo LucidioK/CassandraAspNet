@@ -5,11 +5,7 @@ VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CreateCassandraDBFromCode", "CreateCassandraDBFromCode\CreateCassandraDBFromCode.csproj", "{4B8EE120-8A97-4315-9891-C5DDED4E4926}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AccountHistoryPOCOs", "AccountHistoryPOCOs\AccountHistoryPOCOs.csproj", "{D8FD0FAD-AEEB-4202-91FB-34A7A1EFEEE7}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CassandraDBtoCSharp", "CassandraDBtoCSharp\CassandraDBtoCSharp.csproj", "{2EE918DF-ACF5-4B42-B2D1-194FE952D541}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SerializationTest", "SerializationTest\SerializationTest.csproj", "{F7B8716F-CF2F-4671-A356-813214B3CC73}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenerateSwaggerStandardOperations", "GenerateSwaggerStandardOperations\GenerateSwaggerStandardOperations.csproj", "{8AD1579F-7076-4134-AC31-12A31B484964}"
 EndProject
@@ -29,18 +25,10 @@ Global
 		{4B8EE120-8A97-4315-9891-C5DDED4E4926}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4B8EE120-8A97-4315-9891-C5DDED4E4926}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4B8EE120-8A97-4315-9891-C5DDED4E4926}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D8FD0FAD-AEEB-4202-91FB-34A7A1EFEEE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D8FD0FAD-AEEB-4202-91FB-34A7A1EFEEE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D8FD0FAD-AEEB-4202-91FB-34A7A1EFEEE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D8FD0FAD-AEEB-4202-91FB-34A7A1EFEEE7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2EE918DF-ACF5-4B42-B2D1-194FE952D541}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2EE918DF-ACF5-4B42-B2D1-194FE952D541}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2EE918DF-ACF5-4B42-B2D1-194FE952D541}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2EE918DF-ACF5-4B42-B2D1-194FE952D541}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F7B8716F-CF2F-4671-A356-813214B3CC73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F7B8716F-CF2F-4671-A356-813214B3CC73}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F7B8716F-CF2F-4671-A356-813214B3CC73}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F7B8716F-CF2F-4671-A356-813214B3CC73}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8AD1579F-7076-4134-AC31-12A31B484964}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8AD1579F-7076-4134-AC31-12A31B484964}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8AD1579F-7076-4134-AC31-12A31B484964}.Release|Any CPU.ActiveCfg = Release|Any CPU
