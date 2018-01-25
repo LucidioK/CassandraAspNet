@@ -103,34 +103,29 @@ namespace ^NamespaceBase^.V^ApiVersion^.Controllers
 			return await Get(id);
 		}
 		
-		private async Task<IActionResult> Get(^PrimaryKeyColumnType^ id^FilterParametersWithPrecedingComa^)
+		private async Task<IActionResult> Get(^PrimaryKeyColumnType^? id^FilterParametersWithPrecedingComa^)
         {
-			IActionResult result = null;
-			
 			try
 			{
-				var table = new Table<^EntityName^>(session);
+				var table = new Table<^EntityName^>(_session);
 				
 				var rows = 
 					id == null 
-					? table.Execute().ToList()
-					: table
+					? await table.ExecuteAsync()
+					: await table
 					  .Where(r => r.^PrimaryKeyColumnName^ == id)
-					  .Execute()
-                      .ToList();
+					  .ExecuteAsync();
 				
 ^OptionalRowFilteringCode^
-				rows = rows.Take(Constants.MaximumNumberOfRows).Execute;
-				result = Ok(rows);
+				rows = rows.Take(Constants.MaximumNumberOfRows);
+				return Ok(rows);
 			}
 			catch (Exception e)
 			{
 				_logger.LogError(e.Message);
-				result = e.ToActionResult();
+				throw;
 			}
-			return result;
 		}
-		
 	}
 }
 

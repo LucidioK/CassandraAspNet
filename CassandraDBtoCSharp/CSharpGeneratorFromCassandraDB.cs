@@ -27,12 +27,19 @@ namespace CassandraDBtoCSharp
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include='CassandraCSharpDriver'                                 Version='3.4.0.1' />
-    <PackageReference Include='Newtonsoft.Json'                                       Version='10.0.1'  />
+    <PackageReference Include='Microsoft.AspNet.WebApi                                Version='5.2.3'   />
+	<PackageReference Include='Microsoft.AspNet.WebApi.Owin                           Version='5.2.3'   />
     <PackageReference Include='Microsoft.AspNetCore.All'                              Version='2.0.3'   />
     <PackageReference Include='Microsoft.Extensions.DependencyInjection.Abstractions' Version='2.0.0'   />
+    <PackageReference Include='Microsoft.Owin.Cors                                    Version='3.1.0'   />
+    <PackageReference Include='Microsoft.Owin.Host.SystemWeb                          Version='3.1.0'   />
+    <PackageReference Include='Microsoft.Owin.Security.OAuth                          Version='3.1.0'   />
     <PackageReference Include='Microsoft.VisualStudio.Web.CodeGeneration.Design'      Version='2.0.1'   />
+    <PackageReference Include='Newtonsoft.Json'                                       Version='10.0.1'  />
     <PackageReference Include='Ninject'                                               Version='3.3.4'   />
     <PackageReference Include='Swashbuckle.AspNetCore'                                Version='1.1.0'   />
+    <PackageReference Include='System.IdentityModel.Tokens.Jwt                        Version='5.1.5'   />
+    <PackageReference Include='Thinktecture.IdentityModel.Core                        Version='1.4.0'   />
   </ItemGroup>
   <ItemGroup>
     <Content Update='swagger.json'>

@@ -1,0 +1,11 @@
+null
+.vs/
+CassandraDBtoCSharp/bin/
+CassandraDBtoCSharp/obj/
+*/bin/*
+*/obj/*
+*.diff
+tools/
+available.txt
+publishoutput.lst
+csprojs.lst

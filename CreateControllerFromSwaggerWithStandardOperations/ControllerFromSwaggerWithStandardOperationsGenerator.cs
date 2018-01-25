@@ -160,7 +160,8 @@ namespace CreateControllerFromSwaggerWithStandardOperations
                 filterParameters.Append(GetParameterTypeFromParameter(queryParameter));
                 filterParameters.Append("? ");
                 filterParameters.Append(queryParameter.Name);
-                
+                filterParameters.Append(" = null");
+
                 rowFilteringCode.AppendLine(CreateRowFilteringCodeLine(queryParameter));
             }
             replacementParameters.FilterParameters = filterParameters.ToString();
@@ -181,6 +182,7 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             {
                 replacementParameters.Quote = "'";
             }
+            
             return RunReplacements(Constants.RowFilteringCode, replacementParameters);
         }
 
