@@ -71,7 +71,7 @@ namespace ^NamespaceBase^.V^ApiVersion^.Controllers
 
     [ApiVersion(""^ApiVersion^"")]
     [Produces(""application/json"")]
-    [Route(""v{version:apiVersion}/^EntityNameCamelCase^"")]
+    [Route(""v^ApiVersion^/^EntityNameCamelCase^"")]
     public class ^EntityName^Controller : Controller
     {
         private readonly AppSettings _config;
@@ -86,6 +86,7 @@ namespace ^NamespaceBase^.V^ApiVersion^.Controllers
             _cache = cache;
             _logger = logger;
 			_session = (Session)Cluster.Builder().WithConnectionString(Constants.ConnectionString).Build().Connect();
+            UdtMappings.Map();
         }
 		
 ^ProducesResponseAttributes^

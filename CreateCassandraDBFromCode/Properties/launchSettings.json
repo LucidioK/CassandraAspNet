@@ -2,7 +2,7 @@
   "profiles": {
     "CreateCassandraDBFromCode": {
       "commandName": "Project",
-      "commandLineArgs": "\"Contact Points = localhost; Port = 9042\" \"C:\\Users\\lucidio.kuhn\\Documents\\repos\\psx-communicate-20180117\\src\\bin\\Debug\\netcoreapp2.0\\win10-x64\\publish\\\\app.dll\" pse"
+      "commandLineArgs": "\"Contact Points = localhost; Port = 9042\" \"C:\\Temp\\Sw2CsCl\\bin\\x64\\Release\\netcoreapp2.0\\win10-x64\\publish\\\\app.dll\" PetStore"
     },
     "IISExpress": {
       "commandName": "Executable"

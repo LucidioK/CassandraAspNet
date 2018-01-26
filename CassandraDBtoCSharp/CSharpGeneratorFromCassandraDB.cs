@@ -9,6 +9,28 @@ using Utils;
 
 namespace CassandraDBtoCSharp
 {
+    internal class ColumnDescOrTableColumn
+    {
+        internal ColumnDesc columnDesc;
+        internal TableColumn tableColumn;
+        public static implicit operator ColumnDescOrTableColumn(ColumnDesc columnDesc) => 
+            new ColumnDescOrTableColumn
+            {
+                columnDesc = columnDesc
+            };
+
+        public static implicit operator ColumnDescOrTableColumn(TableColumn tableColumn) =>
+            new ColumnDescOrTableColumn
+            {
+                tableColumn = tableColumn
+            };
+
+        public string Keyspace => columnDesc != null ? columnDesc.Keyspace : tableColumn.Keyspace;
+        public string Name => columnDesc != null ? columnDesc.Name : tableColumn.Name;
+        public string Table => columnDesc != null ? columnDesc.Table : tableColumn.Table;
+        public ColumnTypeCode TypeCode => columnDesc != null ? columnDesc.TypeCode : tableColumn.TypeCode;
+        public IColumnInfo TypeInfo => columnDesc != null ? columnDesc.TypeInfo : tableColumn.TypeInfo;
+    }
 
     internal class CSharpGeneratorFromCassandraDB
     {
@@ -27,19 +49,19 @@ namespace CassandraDBtoCSharp
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include='CassandraCSharpDriver'                                 Version='3.4.0.1' />
-    <PackageReference Include='Microsoft.AspNet.WebApi                                Version='5.2.3'   />
-	<PackageReference Include='Microsoft.AspNet.WebApi.Owin                           Version='5.2.3'   />
+    <PackageReference Include='Microsoft.AspNet.WebApi'                               Version='5.2.3'   />
+	<PackageReference Include='Microsoft.AspNet.WebApi.Owin'                          Version='5.2.3'   />
     <PackageReference Include='Microsoft.AspNetCore.All'                              Version='2.0.3'   />
     <PackageReference Include='Microsoft.Extensions.DependencyInjection.Abstractions' Version='2.0.0'   />
-    <PackageReference Include='Microsoft.Owin.Cors                                    Version='3.1.0'   />
-    <PackageReference Include='Microsoft.Owin.Host.SystemWeb                          Version='3.1.0'   />
-    <PackageReference Include='Microsoft.Owin.Security.OAuth                          Version='3.1.0'   />
+    <PackageReference Include='Microsoft.Owin.Cors'                                   Version='3.1.0'   />
+    <PackageReference Include='Microsoft.Owin.Host.SystemWeb'                         Version='3.1.0'   />
+    <PackageReference Include='Microsoft.Owin.Security.OAuth'                         Version='3.1.0'   />
     <PackageReference Include='Microsoft.VisualStudio.Web.CodeGeneration.Design'      Version='2.0.1'   />
     <PackageReference Include='Newtonsoft.Json'                                       Version='10.0.1'  />
     <PackageReference Include='Ninject'                                               Version='3.3.4'   />
     <PackageReference Include='Swashbuckle.AspNetCore'                                Version='1.1.0'   />
-    <PackageReference Include='System.IdentityModel.Tokens.Jwt                        Version='5.1.5'   />
-    <PackageReference Include='Thinktecture.IdentityModel.Core                        Version='1.4.0'   />
+    <PackageReference Include='System.IdentityModel.Tokens.Jwt'                       Version='5.1.5'   />
+    <PackageReference Include='Thinktecture.IdentityModel.Core'                       Version='1.4.0'   />
   </ItemGroup>
   <ItemGroup>
     <Content Update='swagger.json'>
@@ -49,14 +71,16 @@ namespace CassandraDBtoCSharp
 </Project>
 ";
 
-        private Dictionary<Cassandra.ColumnTypeCode, Func<TableColumn,string>> cassandraToCSharpTypeEquivalency;
+        private Dictionary<Cassandra.ColumnTypeCode, Func<ColumnDescOrTableColumn, string>> cassandraToCSharpTypeEquivalency;
+        private bool isFrozen = false;
+
         public CSharpGeneratorFromCassandraDB(string connectionString, string keySpaceName, string outputDirectory)
         {
             this.session = (Session)Cluster.Builder().WithConnectionString(connectionString).Build().Connect();
             
             this.keySpaceName = keySpaceName;
             this.outputDirectory = outputDirectory;
-            this.cassandraToCSharpTypeEquivalency = new Dictionary<ColumnTypeCode, Func<TableColumn, string>>()
+            this.cassandraToCSharpTypeEquivalency = new Dictionary<ColumnTypeCode, Func<ColumnDescOrTableColumn, string>>()
             {
                 { Cassandra.ColumnTypeCode.Ascii     , t => "string" },
                 { Cassandra.ColumnTypeCode.Bigint    , t => "long" },
@@ -68,7 +92,7 @@ namespace CassandraDBtoCSharp
                 { Cassandra.ColumnTypeCode.Float     , t => "float" },
                 { Cassandra.ColumnTypeCode.Inet      , t => "string" },
                 { Cassandra.ColumnTypeCode.Int       , t => "int" },
-                { Cassandra.ColumnTypeCode.List      , t => "List" },
+                { Cassandra.ColumnTypeCode.List      , t => this.GetListTypeName(t) },
                 { Cassandra.ColumnTypeCode.SmallInt  , t => "int" },
                 { Cassandra.ColumnTypeCode.Text      , t => "string" },
                 { Cassandra.ColumnTypeCode.Time      , t => "DateTime" },
@@ -103,11 +127,11 @@ namespace CassandraDBtoCSharp
                 var properties = new List<string> { "" };
                 foreach (var tableColumn in tableDef.TableColumns)
                 {
+                    this.isFrozen = false;
                     log.Add($" Table {tableDef.Name}, class {className}, column {tableColumn.Name}");
-                    Func<TableColumn, string> csharpTypeNameFunc;
-                    if (this.cassandraToCSharpTypeEquivalency.TryGetValue(tableColumn.TypeCode, out csharpTypeNameFunc))
+                    var csharpTypeName = this.GetCSharpTypeName(tableColumn);
+                    if (csharpTypeName != null)
                     {
-                        var csharpTypeName = csharpTypeNameFunc(tableColumn);
                         AddProperty(tableDef, columnDescriptions, properties, tableColumn, csharpTypeName);
                     }
                     else
@@ -129,9 +153,19 @@ namespace CassandraDBtoCSharp
                         ColumnDescriptions = columnDescriptions
                     });
             }
-            this.CreateUdtTypeInitializerClassIfNeeded();
+            this.CreateUdtTypeInitializerClass();
             this.CreateTypeDescriptionJson();
             File.WriteAllText(Path.Combine(this.outputDirectory, this.keySpaceName + ".csproj"), this.csproj);
+        }
+
+        private string GetCSharpTypeName(ColumnDescOrTableColumn tableColumn)
+        {
+            Func<ColumnDescOrTableColumn, string> csharpTypeNameFunc;
+            if (this.cassandraToCSharpTypeEquivalency.TryGetValue(tableColumn.TypeCode, out csharpTypeNameFunc))
+            {
+                return csharpTypeNameFunc(tableColumn);
+            }
+            return null;
         }
 
         private void PopulateIsIndexField(List<ColumnDescription> columnDescriptions, TableMetadata tableDef)
@@ -147,7 +181,7 @@ namespace CassandraDBtoCSharp
             }
         }
 
-        private static void AddProperty(
+        private void AddProperty(
             TableMetadata tableDef, 
             List<Utils.ColumnDescription> columnDescriptions, 
             List<string> properties, 
@@ -163,13 +197,20 @@ namespace CassandraDBtoCSharp
                 IsPartitionKey = tableDef.PartitionKeys.Any(k => k.Name == columnName),
                 IsClusteringKey = tableDef.ClusteringKeys.Any(k => k.Item1.Name == columnName),
                 CassandraType = tableColumn.TypeCode.ToString(),
-                CSharpType = csharpTypeName
+                CSharpType = csharpTypeName,
+                IsFrozen = this.isFrozen
             };
             columnDescriptions.Add(columnDescription);
             if (columnDescription.IsPartitionKey)
             {
                 properties.Add("        [PartitionKey]");
             }
+
+            if (columnDescription.IsFrozen)
+            {
+                properties.Add("        [FrozenValue]");
+            }
+
             if (columnDescription.IsClusteringKey)
             {
                 properties.Add($"       [ClusteringKey(0, Name = \"{columnName}\")]");
@@ -187,24 +228,26 @@ namespace CassandraDBtoCSharp
                 Path.Combine(this.outputDirectory, "typeDescriptions.json"),
                 JsonConvert.SerializeObject(this.typeDescriptions, Formatting.Indented));
 
-        private void CreateUdtTypeInitializerClassIfNeeded()
+        private void CreateUdtTypeInitializerClass()
         {
-            if (this.udtClasses.Any())
-            {
-                var mappings = new List<string>();
-                this.udtClasses.ForEach(c => mappings.Add($"            {c}.Map(session);"));
-                var udtMapping = $@"        
+             var mappings = new List<string>();
+            this.udtClasses.ForEach(c => mappings.Add($"                {c}.Map(session);"));
+            var udtMapping = $@"        
+        public static bool AlreadyMapped = false;
         public static void Map(Cassandra.Session session)
         {{
-{string.Join("\n", mappings)}
+            if (!AlreadyMapped)
+            {{
+    {string.Join("\n", mappings)}
+            }}
+            AlreadyMapped = true;
         }}";
-                this.CreateCSFile(
-                    $"{this.keySpaceName}UdtMapping",
-                    new List<string>(),
-                    "",
-                    "",
-                    udtMapping);
-            }
+            this.CreateCSFile(
+                $"UdtMapping",
+                new List<string>(),
+                "",
+                "",
+                udtMapping);
         }
 
         private void CreateCSFile(
@@ -220,6 +263,7 @@ namespace CassandraDBtoCSharp
 namespace {Utils.Utils.CSharpifyName(this.keySpaceName)}.Entities
 {{
     using System;
+    using System.Collections.Generic;
     {optionalUsings}
     {optionalTableAttribute}
     public class {className}
@@ -236,7 +280,34 @@ namespace {Utils.Utils.CSharpifyName(this.keySpaceName)}.Entities
             log.Add($"Created {classFileName}");
         }
 
-        private string GetUDTTypeName(TableColumn tableColumn)
+
+        private string GetListTypeName(ColumnDescOrTableColumn tableColumn)
+        {
+            var typeInfo = ((Cassandra.ListColumnInfo)tableColumn.TypeInfo);
+
+            var fakeTableColumn = new TableColumn
+            {
+                TypeCode = typeInfo.ValueTypeCode,
+                TypeInfo = typeInfo,
+                Keyspace = this.keySpaceName,
+                Table = tableColumn.Table,
+            };
+            string memberType = null;
+            if (typeInfo.ValueTypeCode == Cassandra.ColumnTypeCode.Udt)
+            {
+                fakeTableColumn.TypeInfo = typeInfo.ValueTypeInfo;
+                this.isFrozen = true;
+                memberType = this.GetCSharpTypeName(fakeTableColumn);
+            }
+            else
+            {
+                memberType = this.GetCSharpTypeName(fakeTableColumn);
+            }
+
+            return memberType != null ? $"List<{memberType}>" : null;
+        }
+
+        private string GetUDTTypeName(ColumnDescOrTableColumn tableColumn)
         {
             var typeInfo = ((Cassandra.UdtColumnInfo)tableColumn.TypeInfo);
             var typeName = typeInfo.Name;
@@ -250,10 +321,9 @@ namespace {Utils.Utils.CSharpifyName(this.keySpaceName)}.Entities
             foreach (var field in typeInfo.Fields)
             {
                 var columnNameCS = Utils.Utils.CSharpifyName(field.Name);
-                Func<TableColumn, string> csharpTypeNameFunc;
-                if (this.cassandraToCSharpTypeEquivalency.TryGetValue(field.TypeCode, out csharpTypeNameFunc))
+                var csharpTypeName = GetCSharpTypeName(field);
+                if (csharpTypeName != null)
                 {
-                    var csharpTypeName = csharpTypeNameFunc(tableColumn);
                     properties.Add($"        public {csharpTypeName} {columnNameCS} {{ get; set; }}");
                     udtMappings.Add($"                        .Map(a => a.{columnNameCS}, \"{field.Name}\")");
                 }

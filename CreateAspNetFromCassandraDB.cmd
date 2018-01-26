@@ -27,15 +27,25 @@ if not [%errorlevel%]==[0] goto :oops
 
 set ConnectionString=%1
 set KeySpaceName=%2
+set OutputDirectory=%~f3
 rem set UpperKeySpaceName=%KeySpaceName%
 set csproj=%OutputDirectory%\%KeySpaceName%.csproj
 rem call :UpCase UpperKeySpaceName
 
-set OutputDirectory=%~f3
+set EntitiesOutputDirectory=%OutputDirectory%\Entities
+set WebOutputDirectory=%OutputDirectory%\Web
+set UnitTestOutputDirectory=%OutputDirectory%\UnitTest
+set TestOutputDirectory=%OutputDirectory%\Test
 set OAuthUrl=%4
 set currentFolder=%cd%
 set initialSwaggerFile=%OutputDirectory%\swaggerBase.json
 set swaggerWithOpsFile=%OutputDirectory%\swagger.json
+
+if not exist %OutputDirectory%         md %OutputDirectory%
+if not exist %EntitiesOutputDirectory% md %EntitiesOutputDirectory%
+if not exist %WebOutputDirectory%      md %WebOutputDirectory%
+if not exist %UnitTestOutputDirectory% md %UnitTestOutputDirectory%
+if not exist %TestOutputDirectory%     md %TestOutputDirectory%
 
 pushd .
 echo .
@@ -87,7 +97,8 @@ goto :ScriptEnd
 @echo off
 echo %BluBkgWhtFgd% CreateAspNetFromCassandraDB.cmd CassandraConnectionString KeySpaceName OutputDirectory OAuthURL %EndColor%
 echo %BluBkgWhtFgd% Example: %EndColor%
-echo %BluBkgWhtFgd% CreateAspNetFromCassandraDB.cmd "Contact Points = localhost; Port = 9042" pse c:\temp\classes https://somesite.com/oauth/authorize/?client_id=CLIENT-ID&redirect_uri=REDIRECT-URI&response_type=token %EndColor%
+echo %BluBkgWhtFgd% CreateAspNetFromCassandraDB.cmd "Contact Points = localhost; Port = 9042" PetStore c:\temp\PetStore https://somesite.com/oauth/authorize %EndColor%
+echo %EndColor%
 goto :ScriptEnd
 
 :CheckIfExists

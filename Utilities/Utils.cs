@@ -11,6 +11,7 @@ namespace Utils
         public bool IsPartitionKey = false;
         public bool IsClusteringKey = false;
         public bool IsIndex = false;
+        public bool IsFrozen = false;
         public string CassandraType;
         public string CSharpType;
         public string CSharpName;
@@ -24,6 +25,11 @@ namespace Utils
 
     public static class Utils
     {
+        public static bool InvariantEquals(string s1, string s2) => 
+            string.Equals(s1, s2, StringComparison.InvariantCultureIgnoreCase);
+        public static bool InvariantStartsWith(string str, string starts) => 
+            str.StartsWith(starts, StringComparison.InvariantCultureIgnoreCase);
+
         public static string CassandrifyName(string name)
         {
             var cassandrified = new StringBuilder();

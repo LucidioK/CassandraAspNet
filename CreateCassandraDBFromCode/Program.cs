@@ -31,7 +31,7 @@ namespace CreateCassandraDBFromCode
                 var assembly = Assembly.LoadFrom(fullAssemblyPath);
                 var ccc = new CassandraTableCreator();
                 ccc.Initialize(args[0], args[2], assembly);
-                ccc.CreateTables();
+                ccc.Generate();
             }
             catch (Exception e)
             {

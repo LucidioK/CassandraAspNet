@@ -9,7 +9,7 @@ using System.Text;
 namespace CreateCassandraDBFromCode
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <example>
     /// var assembly = Assembly.GetAssembly(typeof(StatementEntity));
@@ -76,22 +76,27 @@ namespace CreateCassandraDBFromCode
             }
         }
 
-        public void CreateTables()
+        public void Generate()
         {
             var tableAttribute = typeof(global::Cassandra.Mapping.Attributes.TableAttribute);
+            var keySpaceNameLowerCase = this.keySpaceName.ToLowerInvariant();
             var cassandraTypes = this.assembly
                                     .DefinedTypes
-                                    .Where(t => 
+                                    .Where(t =>
                                         t.CustomAttributes.Any(a => a.AttributeType == tableAttribute) &&
-                                        t.Namespace != null &&
-                                        t.Namespace.ToLowerInvariant().StartsWith(this.keySpaceName))
+                                        t.Namespace.ToLowerInvariant().StartsWith(keySpaceNameLowerCase, StringComparison.Ordinal))
                                     .ToList();
             foreach (var cassandraType in cassandraTypes)
             {
-                var cassandraTableName = cassandraType
+                var tableAttributeData = cassandraType
                     .CustomAttributes
-                    .FirstOrDefault(a => a.AttributeType == tableAttribute)
-                    .ConstructorArguments[0].Value;
+                    .FirstOrDefault(a => a.AttributeType == tableAttribute);
+                var cassandraTableName =
+                    tableAttributeData.ConstructorArguments.Any()
+                    ?
+                        (string)tableAttributeData.ConstructorArguments[0].Value
+                        :
+                        Utils.Utils.CassandrifyName(cassandraType.Name);
                 System.Console.ForegroundColor = ConsoleColor.Yellow;
                 System.Console.WriteLine($"Trying to create table {cassandraTableName} associated with class {cassandraType.Name}");
                 System.Console.ResetColor();
@@ -99,12 +104,12 @@ namespace CreateCassandraDBFromCode
                 var tableType = typeof(Table<>).MakeGenericType(cassandraType);
                 var tableAttributeValue = (global::Cassandra.Mapping.Attributes.TableAttribute)cassandraType.GetCustomAttribute(tableAttribute);
 
-                var table = Activator.CreateInstance(tableType, new object[] { this.session }); 
+                var table = Activator.CreateInstance(tableType, new object[] { this.session });
                 var createTableIfNotExistsMethod = table
                                     .GetType()
                                     .GetTypeInfo()
                                     .GetMethods()
-                                    .FirstOrDefault(m => m.Name.StartsWith("CreateIfNotExists"));
+                                    .FirstOrDefault(m => m.Name.StartsWith("CreateIfNotExists", StringComparison.Ordinal));
                 try
                 {
                     createTableIfNotExistsMethod.Invoke(table, null);
@@ -132,22 +137,45 @@ namespace CreateCassandraDBFromCode
 
         private void CreateCassandraUserDefinedTypesIfNeeded(TypeInfo cassandraType)
         {
-            var columnAttribute = typeof(global::Cassandra.Mapping.Attributes.ColumnAttribute);
             var cassandraColumnPropertiesWithNonValueType = cassandraType
                     .DeclaredProperties
-                    .Where(p => p.CustomAttributes.Any(a => a.AttributeType == columnAttribute)
-                                && p.PropertyType.IsClass
-                                && p.PropertyType.Namespace.ToLowerInvariant().StartsWith(this.keySpaceName))
+                    .Where(p => IsColumnUsingUserDefinedType(p))
                     .ToList();
             foreach (var cassandraColumnPropertyWithNonValueType in cassandraColumnPropertiesWithNonValueType)
             {
-                var associatedPropertyType = cassandraColumnPropertyWithNonValueType.PropertyType;
+                var associatedPropertyType = GetInnerPropertyType(cassandraColumnPropertyWithNonValueType);
                 this.CreateCassandraUserDefinedTypes(associatedPropertyType);
                 //var udtMapType     = typeof(UdtMapEx<>).MakeGenericType(associatedPropertyType);
                 //var udtMapInstance = Activator.CreateInstance(
-                //    udtMapType, 
+                //    udtMapType,
                 //    new object[] { this.session, associatedPropertyType.Name });
             }
+        }
+
+        private bool IsColumnUsingUserDefinedType(PropertyInfo p)
+        {
+            var columnAttributeType = typeof(global::Cassandra.Mapping.Attributes.ColumnAttribute);
+            var columnAttributeValue = p.CustomAttributes.FirstOrDefault(a => a.AttributeType == columnAttributeType);
+            if (columnAttributeValue == null)
+            {
+                return false;
+            }
+            var type = GetInnerPropertyType(p);
+            return type.IsClass
+                    && Utils.Utils.InvariantStartsWith(type.Namespace, this.keySpaceName);
+        }
+
+        private static Type GetInnerPropertyType(PropertyInfo p)
+        {
+            var type = p.PropertyType;
+            if (type.GenericTypeArguments != null
+                && type.GenericTypeArguments.Any()
+                && type.GetInterfaces().Any(i => i.IsAssignableFrom(typeof(IEnumerable<>))))
+            {
+                type = type.GenericTypeArguments.First();
+            }
+
+            return type;
         }
 
         private void CreateCassandraUserDefinedTypes(Type associatedPropertyType)
@@ -170,7 +198,7 @@ namespace CreateCassandraDBFromCode
 
             var udtMapType     = typeof(UdtMapEx<>).MakeGenericType(associatedPropertyType);
             var udtMapInstance = Activator.CreateInstance(
-                udtMapType, 
+                udtMapType,
                 new object[] { this.session, cassandrifiedTypeName });
         }
 
@@ -185,29 +213,29 @@ namespace CreateCassandraDBFromCode
          */
         private void AddPartitionKeys(TypeInfo cassandraType)
         {
-            this.AddToColumnList(
-                cassandraType,
-                typeof(global::Cassandra.Mapping.Attributes.PartitionKeyAttribute),
-                this.tablePartitionKeys);
+            AddToColumnList(
+                            cassandraType,
+                            typeof(global::Cassandra.Mapping.Attributes.PartitionKeyAttribute),
+                            this.tablePartitionKeys);
         }
 
         private void AddTableClusteringKeys(TypeInfo cassandraType)
         {
-            this.AddToColumnList(
-                cassandraType, 
-                typeof(global::Cassandra.Mapping.Attributes.ClusteringKeyAttribute), 
-                this.tableClusteringKeys);
+            AddToColumnList(
+                            cassandraType,
+                            typeof(global::Cassandra.Mapping.Attributes.ClusteringKeyAttribute),
+                            this.tableClusteringKeys);
         }
 
         private void AddTableColumns(TypeInfo cassandraType)
         {
-            this.AddToColumnList(
-                cassandraType, 
-                typeof(global::Cassandra.Mapping.Attributes.ColumnAttribute), 
-                this.tableColumns);
+            AddToColumnList(
+                            cassandraType,
+                            typeof(global::Cassandra.Mapping.Attributes.ColumnAttribute),
+                            this.tableColumns);
         }
 
-        private void AddToColumnList(TypeInfo cassandraType, Type type, Dictionary<string, List<string>> stringToListDictionary)
+        private static void AddToColumnList(TypeInfo cassandraType, Type type, Dictionary<string, List<string>> stringToListDictionary)
         {
             stringToListDictionary.TryAdd(cassandraType.Name, new List<string>());
 
