@@ -43,7 +43,7 @@ namespace SplitSwaggerByEntity
         {
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(this.swaggerJsonFile);
             var extension = Path.GetExtension(this.swaggerJsonFile);
-            var newFileName = fileNameWithoutExtension + entityName + "." + extension;
+            var newFileName = fileNameWithoutExtension + entityName + extension;
             newFileName = Path.Combine(this.outputFolder, newFileName);
             File.WriteAllText(newFileName, swagger.ToJson());
         }
