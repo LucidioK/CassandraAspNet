@@ -1,5 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Swagger.ObjectModel;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -29,6 +33,66 @@ namespace Utils
             string.Equals(s1, s2, StringComparison.InvariantCultureIgnoreCase);
         public static bool InvariantStartsWith(string str, string starts) => 
             str.StartsWith(starts, StringComparison.InvariantCultureIgnoreCase);
+
+        public static SwaggerRoot LoadSwagger(string swaggerJsonFileName)
+        {
+            var swaggerInputText = PreprocessSwaggerFile(File.ReadAllText(swaggerJsonFileName));
+            var obj = new object();
+            SwaggerRoot swaggerRoot;
+            try
+            {
+                swaggerRoot = JsonConvert.DeserializeObject<SwaggerRoot>(swaggerInputText);
+            }
+            catch (JsonSerializationException)
+            {
+                if (Swagger.ObjectModel.SimpleJson.TryDeserializeObject(swaggerInputText, out obj))
+                {
+                    var jso = (JsonObject)obj;
+                    var security = jso.Keys.Contains("security") ? (JsonArray)jso["security"] : null;
+                    if (security != null)
+                    {
+                        jso.Remove("security");
+                    }
+                    var ss = JsonConvert.SerializeObject(jso);
+                    swaggerRoot = JsonConvert.DeserializeObject<SwaggerRoot>(ss);
+                    if (security != null)
+                    {
+                        ReinjectSecurity(swaggerRoot, security);
+                    }
+                }
+                else
+                {
+                    throw new Exception($"Could not deserialize {swaggerJsonFileName}");
+                }
+            }
+            return swaggerRoot;
+        }
+
+        private static void ReinjectSecurity(SwaggerRoot swaggerRoot, JsonArray security)
+        {
+            swaggerRoot.Security = new Dictionary<SecuritySchemes, IEnumerable<string>>();
+            foreach (JsonObject sec in security)
+            {
+                foreach (var securitySchemeName in sec.Keys)
+                {
+                    var securityScheme = (SecuritySchemes)Enum.Parse(typeof(SecuritySchemes), securitySchemeName);
+                    var permissions = (JsonArray)sec[securitySchemeName];
+                    var permissionsList = new List<string>();
+                    permissions.ForEach(p => permissionsList.Add((string)p));
+                    swaggerRoot.Security.Add(securityScheme, permissionsList);
+                }
+            }
+        }
+
+        public static void ShowHelpAndAbortIfNeeded(string[] args, int expectedNumberOfArgs, string helpMessage)
+        {
+            var helpMarkers = new List<string>() { "-?", "?", "--?", "/?", "help", "-help", "--help", "-h", "--h" };
+            if (args.Length != expectedNumberOfArgs || args.Any(a => helpMarkers.Contains(a.ToLowerInvariant())))
+            {
+
+                Environment.Exit(1);
+            }
+        }
 
         public static string CassandrifyName(string name)
         {
@@ -100,6 +164,11 @@ namespace Utils
         public static void WriteLineBlue(string str)
         {
             WriteLine(str, ConsoleColor.Blue);
+        }
+
+        public static T Clone<T>(T obj)
+        {
+            return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(obj));
         }
     }
 }

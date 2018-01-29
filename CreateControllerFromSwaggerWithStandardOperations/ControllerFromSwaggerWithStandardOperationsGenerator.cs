@@ -75,30 +75,7 @@ namespace CreateControllerFromSwaggerWithStandardOperations
 
         internal void Generate()
         {
-            var swaggerInputText = Utils.Utils.PreprocessSwaggerFile(File.ReadAllText(this.swaggerWithStandardOperationsJson));
-            var obj = new object();
-            SwaggerRoot swaggerRoot;
-            try
-            {
-                swaggerRoot = JsonConvert.DeserializeObject<SwaggerRoot>(swaggerInputText);
-            }
-            catch (JsonSerializationException)
-            {
-                if (Swagger.ObjectModel.SimpleJson.TryDeserializeObject(swaggerInputText, out obj))
-                {
-                    var jso = (JsonObject)obj;
-                    var security = (JsonArray)jso["security"];
-                    jso.Remove("security");
-                    var ss = JsonConvert.SerializeObject(jso);
-                    swaggerRoot = JsonConvert.DeserializeObject<SwaggerRoot>(ss);
-                    ReinjectSecurity(swaggerRoot, security);
-                }
-                else
-                {
-                    throw new Exception($"Could not deserialize {this.swaggerWithStandardOperationsJson}");
-                }
-            }
-            //var swaggerRoot = JsonConvert.DeserializeObject<SwaggerRoot>(swaggerInputText);
+            var swaggerRoot = Utils.Utils.LoadSwagger(this.swaggerWithStandardOperationsJson);
             var controllerNameSpace = Utils.Utils.CSharpifyName(Path.GetFileNameWithoutExtension(this.csProjFile));
             replacementParameters.ApiVersion = this.apiVersion.ToString();
             replacementParameters.MaximumNumberOfRows = this.maxNumberOfRows.ToString();
@@ -112,21 +89,7 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             CreateCSFile(this.csProjDirectory, "AppSettings.cs", Constants.AppSettingsCode);
         }
 
-        private void ReinjectSecurity(SwaggerRoot swaggerRoot, JsonArray security)
-        {
-            swaggerRoot.Security = new Dictionary<SecuritySchemes, IEnumerable<string>>();
-            foreach (JsonObject sec in security)
-            {
-                foreach (var securitySchemeName in sec.Keys)
-                {
-                    var securityScheme = (SecuritySchemes)Enum.Parse(typeof(SecuritySchemes), securitySchemeName);
-                    var permissions = (JsonArray)sec[securitySchemeName];
-                    var permissionsList = new List<string>();
-                    permissions.ForEach(p => permissionsList.Add((string)p));
-                    swaggerRoot.Security.Add(securityScheme, permissionsList);
-                }
-            }
-        }
+
 
         private void CreateController(string key, PathItem pathItem)
         {

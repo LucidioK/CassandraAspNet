@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SplitSwaggerByEntity": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\dsv\\CsClientFromSwaggerGenerator\\PetStoreFormDataIsNowForm.json c:\\temp\\SplitSwaggerByEntityResults"
+    }
+  }
+}
