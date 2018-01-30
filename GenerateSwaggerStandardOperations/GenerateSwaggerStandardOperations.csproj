@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="Swagger.ObjectModel" Version="2.2.47-alpha" />
+    <PackageReference Include="Swagger.ObjectModel" Version="2.2.51-alpha" />
   </ItemGroup>
 
   <ItemGroup>

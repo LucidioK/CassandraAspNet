@@ -20,6 +20,7 @@ for /F "eol=; tokens=* delims=, " %%f in (publishoutput.lst) do (
 )
 
 copy *.cmd tools
+copy *.ps1 tools
 
 Call :AddToolsFolderToPath tools
 

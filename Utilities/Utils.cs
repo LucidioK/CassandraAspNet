@@ -135,7 +135,7 @@ namespace Utils
 
         public static string PreprocessSwaggerFile(string swaggerJson)
         {
-            var processed = swaggerJson.Replace("\n", "").Replace("\r", "").Replace("\t", " ");
+            var processed = swaggerJson.Replace("\n", "").Replace("\r", "").Replace("\t", " ").Replace("formData", "form");
             processed = Regex.Replace(processed, " +", " ");
             processed = Regex.Replace(processed, "\\[ \"null\" *, *(\"[a-z]+\") *]", m => m.Groups[1].Value);
             System.Diagnostics.Debug.WriteLine(processed);
