@@ -43,8 +43,10 @@ namespace Utils
             {
                 swaggerRoot = JsonConvert.DeserializeObject<SwaggerRoot>(swaggerInputText);
             }
-            catch (JsonSerializationException)
+            catch (JsonException e)
             {
+                System.Diagnostics.Debug.WriteLine($"-->Exception: {e.Message} ");
+                System.Diagnostics.Debug.WriteLine($"-->{swaggerInputText} ");
                 if (Swagger.ObjectModel.SimpleJson.TryDeserializeObject(swaggerInputText, out obj))
                 {
                     var jso = (JsonObject)obj;
@@ -54,6 +56,9 @@ namespace Utils
                         jso.Remove("security");
                     }
                     var ss = JsonConvert.SerializeObject(jso);
+                    System.Diagnostics.Debug.WriteLine($"-->{ss} ");
+                    ss = PreprocessSwaggerFile(ss);
+                    System.Diagnostics.Debug.WriteLine($"-->{ss} ");
                     swaggerRoot = JsonConvert.DeserializeObject<SwaggerRoot>(ss);
                     if (security != null)
                     {
@@ -89,7 +94,7 @@ namespace Utils
             var helpMarkers = new List<string>() { "-?", "?", "--?", "/?", "help", "-help", "--help", "-h", "--h" };
             if (args.Length != expectedNumberOfArgs || args.Any(a => helpMarkers.Contains(a.ToLowerInvariant())))
             {
-
+                WriteLineBlue(helpMessage);
                 Environment.Exit(1);
             }
         }
@@ -115,7 +120,7 @@ namespace Utils
         }
         public static string CSharpifyName(string name)
         {
-            var cassandrified = new StringBuilder();
+            var csharpified = new StringBuilder();
             var previousWasUnderline = false;
             foreach (var c in name)
             {
@@ -124,21 +129,21 @@ namespace Utils
                     previousWasUnderline = true;
                     continue;
                 }
-                cassandrified.Append(
-                    cassandrified.Length == 0 || previousWasUnderline ?
+                csharpified.Append(
+                    csharpified.Length == 0 || previousWasUnderline ?
                         char.ToUpperInvariant(c) :
                         c);
                 previousWasUnderline = false;
             }
-            return cassandrified.ToString();
+            return csharpified.ToString();
         }
 
         public static string PreprocessSwaggerFile(string swaggerJson)
         {
-            var processed = swaggerJson.Replace("\n", "").Replace("\r", "").Replace("\t", " ").Replace("formData", "form");
+            var processed = swaggerJson.Replace("\n", "").Replace("\r", "").Replace("\t", " ").Replace("formData", "form").Replace("$ref", "ref");
             processed = Regex.Replace(processed, " +", " ");
-            processed = Regex.Replace(processed, "\\[ \"null\" *, *(\"[a-z]+\") *]", m => m.Groups[1].Value);
-            System.Diagnostics.Debug.WriteLine(processed);
+            processed = Regex.Replace(processed, "\\[ *\"null\" *, *(\"[a-z]+\") *]", m => m.Groups[1].Value);
+            processed = Regex.Replace(processed, "\\[ *(\"[a-z]+\") *, *\"null\" *]", m => m.Groups[1].Value);
             return processed;
         }
 
@@ -169,6 +174,27 @@ namespace Utils
         public static T Clone<T>(T obj)
         {
             return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(obj));
+        }
+
+        public static void ExceptionExit(Exception e, string message, int errorLevel)
+        {
+            e = ExceptionConsoleDisplay(e, message);
+            Environment.Exit(errorLevel);
+        }
+
+        public static Exception ExceptionConsoleDisplay(Exception e, string message)
+        {
+            System.Console.ForegroundColor = ConsoleColor.Red;
+            System.Console.WriteLine("\n\n");
+            System.Console.WriteLine(message);
+            while (e != null)
+            {
+                System.Console.WriteLine(e.Message);
+                e = e.InnerException;
+            }
+            System.Console.WriteLine("\n\n");
+            System.Console.ResetColor();
+            return e;
         }
     }
 }

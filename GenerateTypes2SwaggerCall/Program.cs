@@ -1,25 +1,12 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-
+﻿using System;
 namespace GenerateTypes2SwaggerCall
 {
-    class ColumnDescription
-    {
-        public string Name;
-        public bool IsPartitionKey = false;
-        public bool IsClusteringKey = false;
-        public string Type;
-    }
-    class TypeDescription
-    {
-        public string Name;
-        public List<ColumnDescription> ColumnDescriptions = new List<ColumnDescription>();
-    }
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using System.Text;
+
 
     class Program
     {

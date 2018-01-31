@@ -33,8 +33,7 @@ namespace GenerateSwaggerStandardOperations
         {
             generalResponses = CreateGeneralResponses();
             generalSecurityScheme = CreateSecurityDefinitions();
-            var swaggerInputText = Utils.Utils.PreprocessSwaggerFile(File.ReadAllText(this.swaggerFromNSwagJson));
-            var swaggerRoot = JsonConvert.DeserializeObject<SwaggerRoot>(swaggerInputText);
+            var swaggerRoot = Utils.Utils.LoadSwagger(this.swaggerFromNSwagJson);
             var td = JsonConvert.DeserializeObject<List<Utils.TypeDescription>>(File.ReadAllText(this.typeDescriptionsJson));
             swaggerRoot.SecurityDefinitions = generalSecurityScheme;
             CreateTags(swaggerRoot);
