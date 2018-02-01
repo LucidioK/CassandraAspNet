@@ -6,7 +6,7 @@ function global:FindExecutableInPath([string]$executableName)
 {
     $path=$null;
     $env:Path.Split(';') | foreach {
-        if (Test-Path $_ -PathType Container)
+        if (($_ -ne $null) -and ($_.Length -gt 0) -and (Test-Path $_ -PathType Container))
         {
             [string]$fn = Join-Path $_ $executableName;
             [string]$fnExe = Join-Path $_ ($executableName + ".exe");
@@ -135,4 +135,3 @@ function global:dotnetPublish()
                 '--configuration', 'Debug',
                 '--verbosity',     'Minimal');
 }
-

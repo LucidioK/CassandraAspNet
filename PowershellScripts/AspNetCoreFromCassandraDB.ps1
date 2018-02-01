@@ -56,6 +56,7 @@ if (!($?)) { throw "dotnet publish failed."; }
 $AppDll=Resolve-Path $AppDll;
 if (!(Test-Path $AppDll)) { throw "$AppDll not found, possibly dotnet publish has failed."; }
 
+write-host "$ListTypesWithCustomAttribute $AppDll $CassandraDBAttribute" -ForegroundColor DarkYellow
 $classList = &$ListTypesWithCustomAttribute ($AppDll, $CassandraDBAttribute);
 if (!($?)) { throw "ListTypesWithCustomAttribute failed."; }
 
