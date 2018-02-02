@@ -1,6 +1,6 @@
 ﻿
 &(join-path $PSScriptRoot 'utils.ps1');
-[string]$docker                 = FindExecutableInPathThrowIfNotFound '&$docker' 'Please install &$docker';
+[string]$docker                 = FindExecutableInPathThrowIfNotFound 'docker' 'Please install &$docker';
 
 Write-Host 'starting the CassandraLocal container, from scratch';
 &$docker ('container', 'rm', 'CassandraLocal', '--force');

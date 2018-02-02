@@ -6,13 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CassandraCSharpDriver" Version="3.4.0.1" />
-    <PackageReference Include="Swagger.ObjectModel" Version="2.2.51-alpha" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\CassandraDBFromSwagger\CassandraDBFromSwagger.csproj" />
-    <ProjectReference Include="..\Utilities\Utilities.csproj" />
   </ItemGroup>
 
 </Project>

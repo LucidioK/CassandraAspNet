@@ -135,3 +135,30 @@ function global:dotnetPublish()
                 '--configuration', 'Debug',
                 '--verbosity',     'Minimal');
 }
+
+
+function global:IsUsableList($l)
+{
+    if ($l -ne $null)
+    {
+        if ($l.GetType().BaseType.ToString() -eq 'System.Array')
+        {
+            return $true;
+        }
+    }
+    return $false;
+}
+
+function global:listUnion($l1, $l2)
+{
+    $lr=@();
+    if (global:IsUsableList($l1))
+    {
+        $l1 | foreach { $lr += $_ };
+    }
+    if (global:IsUsableList($l2))
+    {
+        $l2 | foreach { $lr += $_ };
+    }
+    return $lr;
+}

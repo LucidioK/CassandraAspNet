@@ -17,10 +17,11 @@ The KeyNameSpace will be the Swagger file name, without the extension.
 
 Example:
 
-TestCassandraConnectionString ""Contact Points = localhost; Port = 9042"" PetStore.json
+CreateCassandraDBFromSwaggerJson ""Contact Points = localhost; Port = 9042"" PetStore.json
 
 
 ");
+
             var gen = new CassandraDBFromSwaggerGenerator(args[0], args[1]);
             gen.Generate();
             Utils.Utils.WriteLineGreen("CreateCassandraDBFromSwaggerJson end");
