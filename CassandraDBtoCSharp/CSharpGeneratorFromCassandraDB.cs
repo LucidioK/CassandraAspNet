@@ -146,7 +146,7 @@ namespace CassandraDBtoCSharp
                     className,
                     properties,
                     "using Cassandra.Mapping.Attributes;",
-                    $@"[Table(""{tableDef.Name}"", AllowFiltering = true)]");
+                    $@"[Table(""{tableDef.Name}"", Keyspace = ""{keySpace.Name}"" )]");
                 this.typeDescriptions.Add(
                     new Utils.TypeDescription
                     {
