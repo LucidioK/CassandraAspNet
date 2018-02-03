@@ -2,6 +2,18 @@
 # Utils.ps1
 #
 
+[string]$global:docker="";
+function global:StartDockerContainerIfNeeded([string]$containerName)
+{
+    [string]$docker = global:GetDocker;
+
+    &$docker ('container', 'start', $containerName) | Out-Null;
+    if (!($?))
+    {
+        throw "Could not start docker container $containerName, please create it";
+    }
+}
+
 function global:FindExecutableInPath([string]$executableName)
 {
     $path=$null;
@@ -161,4 +173,25 @@ function global:listUnion($l1, $l2)
         $l2 | foreach { $lr += $_ };
     }
     return $lr;
+}
+
+function global:GetDocker()
+{
+    if ($global:docker.Length -eq 0)
+    {
+        $global:docker = FindExecutableInPathThrowIfNotFound 'docker' 'Please install docker';
+    }
+    return $global:docker;
+}
+
+function global:GetCassandraKeySpaceNamesFromDockerContainer([string]$CassandraDockerContainer)
+{
+    [string]$docker = global:GetDocker;
+    $keySpaceNames = &$docker ('exec', '--privileged', '-it', $CassandraDockerContainer, 'cqlsh', '-e', 'describe keyspaces;');
+    if (global:IsUsableList($keySpaceNames))
+    {
+        $keySpaceNames = [System.String]::Join(' ', $keySpaceNames);
+    }
+    $keySpaceNames = ($keySpaceNames -replace ' +',' ').Split(' ');
+    return $keySpaceNames;
 }

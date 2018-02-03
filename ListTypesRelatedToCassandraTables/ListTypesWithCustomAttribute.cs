@@ -21,13 +21,14 @@ ListTypesRelatedToCassandraTables C:\temp\classes\bin\x64\Debug\netcoreapp2.0\wi
 
 ");
 
-            Assembly
-                .LoadFrom(args[0])
-                .GetExportedTypes()
-                .Where(t =>
+        var assembly = Assembly.LoadFrom(args[0]);
+        var exportedTypes = assembly.GetExportedTypes();
+        var exportedTypesWithSpecifiedCustomAttribute = exportedTypes
+            .Where(t =>
                     t.CustomAttributes.Any(a => a.AttributeType.FullName == args[1]))
-                .ToList()
-                .ForEach(t => Console.WriteLine(t.FullName));
+                    .ToList();
+        exportedTypesWithSpecifiedCustomAttribute
+            .ForEach(t => Console.WriteLine(t.FullName));
         }
     }
 }

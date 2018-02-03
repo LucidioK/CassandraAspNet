@@ -33,9 +33,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestCassandraConnectionStri
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CreateCassandraDBFromSwaggerJson", "CreateCassandraDBFromSwaggerJson\CreateCassandraDBFromSwaggerJson.csproj", "{26173771-9ED4-43E6-8CCE-DB23EB806608}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CassandraDBFromSwagger", "CassandraDBFromSwagger\CassandraDBFromSwagger.csproj", "{DF43678D-94D7-40E4-8884-6B1473B7BC71}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CassandraDBFromSwagger", "CassandraDBFromSwagger\CassandraDBFromSwagger.csproj", "{DF43678D-94D7-40E4-8884-6B1473B7BC71}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CassandraDBCreateCommandsFromSwaggerJson", "CassandraDBCreateCommandsFromSwaggerJson\CassandraDBCreateCommandsFromSwaggerJson.csproj", "{DF853DA5-FC9B-4451-85D7-F4AD953116FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CassandraDBCreateCommandsFromSwaggerJson", "CassandraDBCreateCommandsFromSwaggerJson\CassandraDBCreateCommandsFromSwaggerJson.csproj", "{DF853DA5-FC9B-4451-85D7-F4AD953116FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cqlExec", "cqlExec\cqlExec.csproj", "{DA18FAD8-C915-4016-B931-04E62C3CD33F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -95,6 +97,10 @@ Global
 		{DF853DA5-FC9B-4451-85D7-F4AD953116FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF853DA5-FC9B-4451-85D7-F4AD953116FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF853DA5-FC9B-4451-85D7-F4AD953116FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA18FAD8-C915-4016-B931-04E62C3CD33F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA18FAD8-C915-4016-B931-04E62C3CD33F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA18FAD8-C915-4016-B931-04E62C3CD33F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA18FAD8-C915-4016-B931-04E62C3CD33F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

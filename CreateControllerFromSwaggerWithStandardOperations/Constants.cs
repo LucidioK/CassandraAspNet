@@ -69,7 +69,7 @@ namespace ^NamespaceBase^.V^ApiVersion^.Controllers
 	using Cassandra.Data.Linq;
     using System.Linq;
 
-    [ApiVersion(""^ApiVersion^"")]
+    //[ApiVersion(""^ApiVersion^"")]
     [Produces(""application/json"")]
     [Route(""v^ApiVersion^/^EntityNameCamelCase^"")]
     public class ^EntityName^Controller : Controller
@@ -86,7 +86,7 @@ namespace ^NamespaceBase^.V^ApiVersion^.Controllers
             _cache = cache;
             _logger = logger;
 			_session = (Session)Cluster.Builder().WithConnectionString(Constants.ConnectionString).Build().Connect();
-            UdtMappings.Map();
+            UdtMapping.Map(_session);
         }
 		
 ^ProducesResponseAttributes^

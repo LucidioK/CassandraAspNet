@@ -1,5 +1,6 @@
 ﻿using Cassandra;
 using Newtonsoft.Json;
+using Swagger.ObjectModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -41,6 +42,7 @@ namespace CassandraDBtoCSharp
         private string keySpaceName;
         private string outputDirectory;
         private List<string> udtClasses = new List<string>();
+        private SwaggerRoot swaggerRoot = new SwaggerRoot();
         private string csproj = @"
 <Project Sdk='Microsoft.NET.Sdk'>
   <PropertyGroup>
@@ -48,20 +50,14 @@ namespace CassandraDBtoCSharp
     <AssemblyName>App</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include='CassandraCSharpDriver'                                 Version='3.4.0.1' />
-    <PackageReference Include='Microsoft.AspNet.WebApi'                               Version='5.2.3'   />
-	<PackageReference Include='Microsoft.AspNet.WebApi.Owin'                          Version='5.2.3'   />
-    <PackageReference Include='Microsoft.AspNetCore.All'                              Version='2.0.3'   />
-    <PackageReference Include='Microsoft.Extensions.DependencyInjection.Abstractions' Version='2.0.0'   />
-    <PackageReference Include='Microsoft.Owin.Cors'                                   Version='3.1.0'   />
-    <PackageReference Include='Microsoft.Owin.Host.SystemWeb'                         Version='3.1.0'   />
-    <PackageReference Include='Microsoft.Owin.Security.OAuth'                         Version='3.1.0'   />
-    <PackageReference Include='Microsoft.VisualStudio.Web.CodeGeneration.Design'      Version='2.0.1'   />
-    <PackageReference Include='Newtonsoft.Json'                                       Version='10.0.1'  />
-    <PackageReference Include='Ninject'                                               Version='3.3.4'   />
-    <PackageReference Include='Swashbuckle.AspNetCore'                                Version='1.1.0'   />
-    <PackageReference Include='System.IdentityModel.Tokens.Jwt'                       Version='5.1.5'   />
-    <PackageReference Include='Thinktecture.IdentityModel.Core'                       Version='1.4.0'   />
+    <PackageReference Include='CassandraCSharpDriver' Version='3.4.0.1' />
+    <PackageReference Include='Microsoft.AspNetCore.All' Version='2.0.3' />
+    <PackageReference Include='Microsoft.Extensions.DependencyInjection.Abstractions' Version='2.0.0' />
+    <PackageReference Include='Microsoft.VisualStudio.Web.CodeGeneration.Design' Version='2.0.1' />
+    <PackageReference Include='Newtonsoft.Json' Version='10.0.1' />
+    <PackageReference Include='Ninject' Version='3.3.4' />
+    <PackageReference Include='Swashbuckle.AspNetCore' Version='1.1.0' />
+    <PackageReference Include='System.IdentityModel.Tokens.Jwt' Version='5.1.5' />
   </ItemGroup>
   <ItemGroup>
     <Content Update='swagger.json'>
@@ -77,7 +73,10 @@ namespace CassandraDBtoCSharp
         public CSharpGeneratorFromCassandraDB(string connectionString, string keySpaceName, string outputDirectory)
         {
             this.session = (Session)Cluster.Builder().WithConnectionString(connectionString).Build().Connect();
-            
+            this.swaggerRoot.Definitions = new Dictionary<string, Schema>();
+            this.swaggerRoot.Info = new Info { Title = keySpaceName, Version = "" };
+            this.swaggerRoot.Schemes = new List<Schemes>();
+            this.swaggerRoot.Paths = new Dictionary<string, PathItem>();
             this.keySpaceName = keySpaceName;
             this.outputDirectory = outputDirectory;
             this.cassandraToCSharpTypeEquivalency = new Dictionary<ColumnTypeCode, Func<ColumnDescOrTableColumn, string>>()
@@ -116,13 +115,16 @@ namespace CassandraDBtoCSharp
             {
                 throw new DirectoryNotFoundException($"{this.outputDirectory} not found.");
             }
-            var tables = session.Cluster.Metadata.GetTables(this.keySpaceName).ToList();
+            var tables = session.Cluster.Metadata.GetTables(this.keySpaceName.ToLowerInvariant()).ToList();
+            var keySpace = session.Cluster.Metadata.GetKeyspace(this.keySpaceName.ToLowerInvariant());
+
             log.Add($"Starting generation, {tables.Count} tables.");
             foreach (var tableName in tables)
             {
-                var tableDef = session.Cluster.Metadata.GetTable(this.keySpaceName, tableName);
+                var tableDef = session.Cluster.Metadata.GetTable(this.keySpaceName.ToLowerInvariant(), tableName);
                 var columnDescriptions = new List<Utils.ColumnDescription>();
                 var className = Utils.Utils.CSharpifyName(tableDef.Name);
+                this.swaggerRoot.Definitions.Add(className, new Schema());
                 log.Add($" Starting table {tableDef.Name}, class {className}");
                 var properties = new List<string> { "" };
                 foreach (var tableColumn in tableDef.TableColumns)
@@ -154,8 +156,42 @@ namespace CassandraDBtoCSharp
                     });
             }
             this.CreateUdtTypeInitializerClass();
+            this.CreateSwaggerJson();
             this.CreateTypeDescriptionJson();
             File.WriteAllText(Path.Combine(this.outputDirectory, this.keySpaceName + ".csproj"), this.csproj);
+        }
+
+        private void CreateSwaggerJson()
+        {
+            var swaggerDefinitions = this.swaggerRoot.Definitions.Keys.ToList();
+            foreach (var className in swaggerDefinitions)
+            {
+                var typeDescription = this.typeDescriptions.FirstOrDefault(t => t.CSharpName == className);
+                Schema schema;
+                if (this.swaggerRoot.Definitions.TryGetValue(className, out schema))
+                {
+                    schema.Type = "object";
+                    schema.Properties = new Dictionary<string, Schema>();
+                    foreach (var columnDescription in typeDescription.ColumnDescriptions)
+                    {
+                        var propertySchema = new Schema
+                        {
+                            Type = GetSwaggerType(columnDescription),
+                            Ref = GetSwaggerRef(columnDescription),
+                            Format = GetSwaggerFormat(columnDescription),
+                        };
+                        var itemsRef = GetSwaggerItemsRef(columnDescription);
+                        var itemsType = GetSwaggerItemsType(columnDescription);
+                        if (itemsRef != null || itemsType != null)
+                        {
+                            propertySchema.Items = new Item { Ref = itemsRef, Type = itemsType };
+                        }
+                        schema.Properties.Add(Utils.Utils.CamelCase(columnDescription.CSharpName), propertySchema);
+                    }
+                }
+            }
+            var jsonFileName = Path.Combine(this.outputDirectory, "swaggerBase.json");
+            File.WriteAllText(jsonFileName, swaggerRoot.ToJson());
         }
 
         private string GetCSharpTypeName(ColumnDescOrTableColumn tableColumn)
@@ -192,13 +228,14 @@ namespace CassandraDBtoCSharp
             var columnNameCS = Utils.Utils.CSharpifyName(columnName);
             var columnDescription = new Utils.ColumnDescription
             {
+                CassandraColumnName = columnName,
                 CamelCaseName = Utils.Utils.CamelCase(columnName),
                 CSharpName = columnNameCS,
                 IsPartitionKey = tableDef.PartitionKeys.Any(k => k.Name == columnName),
                 IsClusteringKey = tableDef.ClusteringKeys.Any(k => k.Item1.Name == columnName),
                 CassandraType = tableColumn.TypeCode.ToString(),
                 CSharpType = csharpTypeName,
-                IsFrozen = this.isFrozen
+                IsFrozen = this.isFrozen,
             };
             columnDescriptions.Add(columnDescription);
             if (columnDescription.IsPartitionKey)
@@ -284,7 +321,7 @@ namespace {Utils.Utils.CSharpifyName(this.keySpaceName)}.Entities
         private string GetListTypeName(ColumnDescOrTableColumn tableColumn)
         {
             var typeInfo = ((Cassandra.ListColumnInfo)tableColumn.TypeInfo);
-
+            
             var fakeTableColumn = new TableColumn
             {
                 TypeCode = typeInfo.ValueTypeCode,
@@ -310,6 +347,7 @@ namespace {Utils.Utils.CSharpifyName(this.keySpaceName)}.Entities
         private string GetUDTTypeName(ColumnDescOrTableColumn tableColumn)
         {
             var typeInfo = ((Cassandra.UdtColumnInfo)tableColumn.TypeInfo);
+
             var typeName = typeInfo.Name;
             if (typeName.Contains("."))
             {
@@ -346,6 +384,162 @@ namespace {Utils.Utils.CSharpifyName(this.keySpaceName)}.Entities
             this.CreateCSFile(className, properties, "", "", udtMapping);
             this.udtClasses.Add(className);
             return className;
+        }
+        /*
+                    if (format == null && type == "string")
+                    {
+                        return "text";
+                    }
+                    if (type?.ToLowerInvariant() == "array")
+                    {
+                        return (items.Ref != null) ? 
+                            $"frozen<list<{Utils.Utils.CassandrifyName(GetRefname(items.Ref))}>>" 
+                            : 
+                            $"frozen<list<{GetCassandraType(items.Type, items.Format, items.Items, items.Ref)}>>";
+                    }
+                    if (type?.ToLowerInvariant() == "boolean")
+                    {
+                        return "boolean";
+                    }
+                    if (reference != null)
+                    {
+                        return Utils.Utils.CassandrifyName(GetRefname(reference));
+                    }
+                    switch (format?.ToLowerInvariant())
+                    {
+                        case "int64":
+                            return "bigint";
+                        case "int32":
+                            return "int";
+                        case "int16":
+                            return "int";
+                        case "int8":
+                            return "int";
+                        case "date-time":
+                            return "timestamp";
+                        default:
+                            return null;
+                    }
+         **/
+        private static string GetSwaggerFormat(ColumnDescription columnDescription)
+        {
+            if (columnDescription.CSharpType.StartsWith("List"))
+            {
+                return null;
+            }
+            var cSharpType = columnDescription.CSharpType;
+            return GetSwaggerFormat(cSharpType);
+        }
+
+        private static string GetSwaggerFormat(string cSharpType)
+        {
+            switch (cSharpType.ToLowerInvariant())
+            {
+                case "datetime":
+                    return "date-time";
+                case "long":
+                    return "int64";
+                case "int":
+                    return "int32";
+                case "short":
+                    return "int16";
+                case "byte":
+                    return "int8";
+            }
+            return null;
+        }
+
+        private string GetSwaggerRef(ColumnDescription columnDescription)
+        {
+            if (columnDescription.CassandraType == "Udt")
+            {
+                this.AddSwaggerUdtIfNeeded(columnDescription);
+                return columnDescription.IsUdt() ? $"#/definitions/{columnDescription.CSharpType}" : columnDescription.CSharpType;
+            }
+
+            return null;
+        }
+
+        private void AddSwaggerUdtIfNeeded(ColumnDescription columnDescription)
+        {
+            var udtName = (columnDescription.CassandraType.ToLowerInvariant() == "list") 
+                ? columnDescription.CSharpType.Replace("List<", "").Replace(">", "") 
+                : columnDescription.CSharpType;
+            var udtNameCassandrified = Utils.Utils.CassandrifyName(udtName);
+            var udtDef = this.session.Cluster.Metadata.GetUdtDefinition(this.keySpaceName.ToLowerInvariant(), udtNameCassandrified);
+            if (udtDef != null && this.swaggerRoot.Definitions.Keys.All(k => k != udtName))
+            {
+                var schema = new Schema { Type = "object", Properties = new Dictionary<string, Schema>() };
+
+                foreach (var field in udtDef.Fields)
+                {
+                    var csharpType = this.GetCSharpTypeName(field);
+                    var propertySchema = new Schema
+                    {
+                        Type = GetSwaggerType(csharpType),
+                        Format = GetSwaggerFormat(csharpType),
+                    };
+                    schema.Properties.Add(Utils.Utils.CamelCase(field.Name), propertySchema);
+                }
+
+                this.swaggerRoot.Definitions.Add(udtName, schema);
+            }
+        }
+
+        private string GetSwaggerItemsRef(ColumnDescription columnDescription)
+        {
+            if (columnDescription.CassandraType.ToLowerInvariant() == "list" && columnDescription.IsUdt())
+            {
+                var r = columnDescription.CSharpType.Replace("List<", "").Replace(">", "");
+                this.AddSwaggerUdtIfNeeded(columnDescription);
+                return $"#/definitions/{r}";
+            }
+            return null;
+        }
+
+        private string GetSwaggerItemsType(ColumnDescription columnDescription)
+        {
+            if (columnDescription.CassandraType.ToLowerInvariant() == "list" && !columnDescription.IsUdt())
+            {
+                return columnDescription.CSharpType.Replace("List<", "").Replace(">", "");
+            }
+            return null;
+        }
+
+        private string GetSwaggerType(ColumnDescription columnDescription)
+        {
+            if (columnDescription.CassandraType.ToLowerInvariant() == "list")
+            {
+                return "array";
+            }
+            return GetSwaggerType(columnDescription.CSharpType);
+        }
+
+        private static string GetSwaggerType(string csharpType)
+        {
+            switch (csharpType.ToLowerInvariant())
+            {
+                case "bool":
+                    return "boolean";
+                case "datetime":
+                    return "string";
+                case "decimal":
+                    return "number";
+                case "double":
+                    return "number";
+                case "float":
+                    return "number";
+                case "guid":
+                    return "string";
+                case "int":
+                    return "number";
+                case "long":
+                    return "number";
+                case "string":
+                    return "string";
+            }
+
+            return null;
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿param(
-    [parameter(Mandatory=$True, Position=0)][string]$ConnectionString,
-    [parameter(Mandatory=$True, Position=1)][string]$KeySpaceName,
-    [parameter(Mandatory=$True, Position=2)][string]$OutputDirectory,
-    [parameter(Mandatory=$True, Position=2)][string]$OAuthUrl
+    [parameter(Mandatory=$True, Position=0)][string]$ConnectionString = "Contact Points = localhost; Port = 9042",
+    [parameter(Mandatory=$True, Position=1)][string]$KeySpaceName     = "PetStore",
+    [parameter(Mandatory=$True, Position=2)][string]$OutputDirectory  = "c:\temp\PetStore",
+    [parameter(Mandatory=$True, Position=2)][string]$OAuthUrl         = "http://some.url"
 
 )
 pushd .
@@ -16,9 +16,6 @@ pushd .
 [string]$netcoreversion         = 'netcoreapp2.0';
 [string]$csproj                  =Join-Path $OutputDirectory "$KeySpaceName.csproj";
 [string]$publishDirectory       = "bin\$BuildConfiguration\$netcoreversion\$runtime\publish";
-[string]$dotnet                 = FindExecutableInPathThrowIfNotFound 'dotnet' 'Please install dotnet core from https://www.microsoft.com/net/download/windows#core';
-[string]$npm                    = FindExecutableInPathThrowIfNotFound 'npm'   'Please install npm from https://nodejs.org/en/download/';
-[string]$nswag                  = FindExecutableInPathThrowIfNotFound 'nswag' 'Please install nswag with npm install nswag -g';
 [string]$EntitiesOutputDirectory=Join-Path $OutputDirectory "Entities";
 [string]$WebOutputDirectory     =Join-Path $OutputDirectory "Web";
 [string]$UnitTestOutputDirectory=Join-Path $OutputDirectory "UnitTest";
@@ -38,40 +35,11 @@ global:CreateDirectoriesIfNotExist ($OutputDirectory, $EntitiesOutputDirectory, 
 $OutputDirectory                =Resolve-Path $OutputDirectory;
 
 write-host "$CassandraDBtoCSharp $ConnectionString $KeySpaceName $OutputDirectory" -ForegroundColor DarkYellow
+# CassandraDBtoCSharp generates the class files, typeDescriptionsFile file and the initialSwaggerFile
 &$CassandraDBtoCSharp ($ConnectionString, $KeySpaceName, $OutputDirectory);
 if (!($?)) { throw "Error running CassandraDBtoCSharp"; }
 
 cd $OutputDirectory;
-&$dotnet ('clean');
-write-host "$dotnet publish --self-contained --runtime $runtime --configuration $BuildConfiguration --verbosity Minimal" -ForegroundColor DarkYellow
-&$dotnet ('publish',
-            '--self-contained',
-            '--runtime',       $runtime,
-            '--configuration', $BuildConfiguration,
-            '--verbosity',     'Minimal');
-if (!($?)) { throw "dotnet publish failed."; }
-
-
-[string]$AppDll = Join-Path $publishDirectory "App.dll";
-$AppDll=Resolve-Path $AppDll;
-if (!(Test-Path $AppDll)) { throw "$AppDll not found, possibly dotnet publish has failed."; }
-
-write-host "$ListTypesWithCustomAttribute $AppDll $CassandraDBAttribute" -ForegroundColor DarkYellow
-$classList = &$ListTypesWithCustomAttribute ($AppDll, $CassandraDBAttribute);
-if (!($?)) { throw "ListTypesWithCustomAttribute failed."; }
-
-$classNames=[System.String]::Join(",", $classList);
-
-Write-Host "$nswag types2swagger /Assembly:$AppDll /ClassNames:$classNames /DefaultPropertyNameHandling:CamelCase /DefaultEnumHandling:String /Output:$initialSwaggerFile " -ForegroundColor DarkYellow;
-&$nswag ("types2swagger",
-            "/Assembly:$AppDll",
-            "/ClassNames:$classNames",
-            "/DefaultPropertyNameHandling:CamelCase",
-            "/DefaultEnumHandling:String",
-            "/Output:$initialSwaggerFile");
-if (!($?)) { throw "nswag types2swagger failed."; }
-
-timeout /T 5
 
 Write-Host $GenerateSwaggerStandardOperations $KeySpaceName $initialSwaggerFile $typeDescriptionsFile $swaggerWithOpsFile $OAuthUrl -ForegroundColor DarkYellow;
 &$GenerateSwaggerStandardOperations ($KeySpaceName, $initialSwaggerFile, $typeDescriptionsFile, $swaggerWithOpsFile, $OAuthUrl);

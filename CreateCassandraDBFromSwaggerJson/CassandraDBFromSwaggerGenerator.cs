@@ -22,6 +22,7 @@ namespace CreateCassandraDBFromSwaggerJson
         public void Generate()
         {
             var session = (Session)Cluster.Builder().WithConnectionString(connectionString).Build().Connect();
+            var b = new Builder();
             var cassandraDBFromSwagger = new CassandraDBFromSwagger.CassandraDBFromSwagger(this.swaggerFileName);
             var cqlStatements = cassandraDBFromSwagger.Generate();
             foreach (var cqlStatement in cqlStatements)

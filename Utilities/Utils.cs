@@ -11,14 +11,21 @@ namespace Utils
 {
     public class ColumnDescription
     {
+        public string CassandraColumnName;
         public string CamelCaseName;
         public bool IsPartitionKey = false;
         public bool IsClusteringKey = false;
         public bool IsIndex = false;
         public bool IsFrozen = false;
+        public bool IsNullable = false;
         public string CassandraType;
         public string CSharpType;
         public string CSharpName;
+        public bool IsUdt()
+        {
+            return this.CassandraType == "Udt" ||
+                   (this.CassandraType == "List" && this.IsFrozen);
+        }
     }
     public class TypeDescription
     {
