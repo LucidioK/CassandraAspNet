@@ -218,7 +218,9 @@ namespace Utils
             var files = Directory.EnumerateFiles(directory, filter, SearchOption.AllDirectories);
             Parallel.ForEach(files, file =>
             {
-                var text = 
+                var text = File.ReadAllText(file);
+                text = text.Replace(oldText, newText);
+                File.WriteAllText(file, text);
             });
         }
     }

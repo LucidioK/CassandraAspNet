@@ -41,6 +41,7 @@ foreach ($csproj in $csprojs)
                 '--runtime',       $runtime,
                 '--configuration', 'Debug',
                 '--verbosity',     'Minimal');
+    if (!($?)) { throw "$toBuild failed."; }
 }
 
 popd

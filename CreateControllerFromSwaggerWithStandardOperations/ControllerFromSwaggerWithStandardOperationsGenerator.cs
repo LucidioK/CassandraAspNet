@@ -87,6 +87,7 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             }
             CreateCSFile(this.csProjDirectory, "Constants.cs", Constants.ConstantsCode);
             CreateCSFile(this.csProjDirectory, "AppSettings.cs", Constants.AppSettingsCode);
+            Utils.Utils.ReplaceInFiles(this.csProjDirectory, "*.cs", "using WebApp", $"using {replacementParameters.NamespaceBase}");
         }
 
 
