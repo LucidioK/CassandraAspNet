@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Utils
 {
@@ -202,6 +203,23 @@ namespace Utils
             System.Console.WriteLine("\n\n");
             System.Console.ResetColor();
             return e;
+        }
+
+        public static void CreateDirectoryIfNeeded(string directory)
+        {
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+        }
+
+        public static void ReplaceInFiles(string directory, string filter, string oldText, string newText)
+        {
+            var files = Directory.EnumerateFiles(directory, filter, SearchOption.AllDirectories);
+            Parallel.ForEach(files, file =>
+            {
+                var text = 
+            });
         }
     }
 }

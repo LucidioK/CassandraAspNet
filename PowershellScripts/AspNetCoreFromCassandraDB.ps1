@@ -12,6 +12,7 @@ pushd .
 [string]$Types2SwaggerCmd       = 'Types2Swagger.cmd';
 [string]$CassandraDBAttribute   = 'Cassandra.Mapping.Attributes.TableAttribute';
 [string]$BuildConfiguration     = "Debug";
+[string]$webAppZip              = Join-Path $PSScriptRoot "WebApp.zip";
 [string]$runtime                = global:GetRuntime;
 [string]$netcoreversion         = 'netcoreapp2.0';
 [string]$csproj                  =Join-Path $OutputDirectory "$KeySpaceName.csproj";
@@ -31,7 +32,8 @@ pushd .
 [string]$CreateControllerFromSwaggerWithStandardOperations =Join-Path $ToolsDirectory 'CreateControllerFromSwaggerWithStandardOperations.exe';
 
 global:AddToPathIfNeeded $ToolsDirectory;
-global:CreateDirectoriesIfNotExist ($OutputDirectory, $EntitiesOutputDirectory, $WebOutputDirectory, $UnitTestOutputDirectory, $TestOutputDirectory);
+global:CreateDirectoriesIfNotExist ($OutputDirectory);
+global:Unzip $webAppZip $OutputDirectory;
 $OutputDirectory                =Resolve-Path $OutputDirectory;
 
 write-host "$CassandraDBtoCSharp $ConnectionString $KeySpaceName $OutputDirectory" -ForegroundColor DarkYellow

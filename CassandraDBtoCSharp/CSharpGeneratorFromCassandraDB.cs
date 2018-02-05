@@ -41,6 +41,7 @@ namespace CassandraDBtoCSharp
         private Session session;
         private string keySpaceName;
         private string outputDirectory;
+        private string modelDirectory;
         private List<string> udtClasses = new List<string>();
         private SwaggerRoot swaggerRoot = new SwaggerRoot();
         private string csproj = @"
@@ -79,6 +80,10 @@ namespace CassandraDBtoCSharp
             this.swaggerRoot.Paths = new Dictionary<string, PathItem>();
             this.keySpaceName = keySpaceName;
             this.outputDirectory = outputDirectory;
+            Utils.Utils.CreateDirectoryIfNeeded(this.outputDirectory);
+            this.modelDirectory = Path.Combine(outputDirectory, "Model");
+            Utils.Utils.CreateDirectoryIfNeeded(this.modelDirectory);
+
             this.cassandraToCSharpTypeEquivalency = new Dictionary<ColumnTypeCode, Func<ColumnDescOrTableColumn, string>>()
             {
                 { Cassandra.ColumnTypeCode.Ascii     , t => "string" },
@@ -273,6 +278,7 @@ namespace CassandraDBtoCSharp
         public static bool AlreadyMapped = false;
         public static void Map(Cassandra.Session session)
         {{
+            session.Execute(""use {this.keySpaceName.ToLowerInvariant()};"");
             if (!AlreadyMapped)
             {{
     {string.Join("\n", mappings)}
@@ -312,7 +318,7 @@ namespace {Utils.Utils.CSharpifyName(this.keySpaceName)}.Entities
         {string.Join("\n", properties)}
     }}
 }}";
-            var classFileName = Path.Combine(this.outputDirectory, className + ".cs");
+            var classFileName = Path.Combine(this.modelDirectory, className + ".cs");
             File.WriteAllText(classFileName, classDefinition);
             log.Add($"Created {classFileName}");
         }

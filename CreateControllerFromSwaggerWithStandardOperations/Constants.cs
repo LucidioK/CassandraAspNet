@@ -71,7 +71,7 @@ namespace ^NamespaceBase^.V^ApiVersion^.Controllers
 
     //[ApiVersion(""^ApiVersion^"")]
     [Produces(""application/json"")]
-    [Route(""v^ApiVersion^/^EntityNameCamelCase^"")]
+    [Route(""v^ApiVersion^"")]
     public class ^EntityName^Controller : Controller
     {
         private readonly AppSettings _config;
