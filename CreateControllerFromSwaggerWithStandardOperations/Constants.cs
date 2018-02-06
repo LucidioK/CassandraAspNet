@@ -64,7 +64,7 @@ namespace ^NamespaceBase^.V^ApiVersion^.Controllers
 	using Microsoft.Extensions.Caching.Memory;
 	using Microsoft.Extensions.Logging;
 	using Microsoft.Extensions.Options;
-	using ^NamespaceBase^.Entities;
+	using ^NamespaceBase^.Model;
 	using Cassandra;
 	using Cassandra.Data.Linq;
     using System.Linq;

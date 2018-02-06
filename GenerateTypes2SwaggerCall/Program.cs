@@ -20,7 +20,7 @@ namespace GenerateTypes2SwaggerCall
                 Environment.Exit(1);
             }
             var assembly = Assembly.LoadFrom(args[1]);
-            var entitiesNamespace = Utils.Utils.CSharpifyName(args[0]) + ".Entities";
+            var entitiesNamespace = Utils.Utils.CSharpifyName(args[0]) + ".Model";
             var tableAttribute = typeof(global::Cassandra.Mapping.Attributes.TableAttribute);
             var types = assembly
                 .GetExportedTypes()
@@ -38,7 +38,7 @@ namespace GenerateTypes2SwaggerCall
             File.WriteAllText(args[2], command);
             Utils.Utils.WriteLineGreen("GenerateTypes2SwaggerCall end");
         }
-        // nswag types2swagger /Assembly:bin\x64\Release\netcoreapp2.0\win10-x64\publish\%2.dll /ClassNames:PSE.Entities.ContractAccount,PSE.Entities.PaymentHistory /DefaultPropertyNameHandling:CamelCase /DefaultEnumHandling:String /Output:pseSwagger.json
+        // nswag types2swagger /Assembly:bin\x64\Release\netcoreapp2.0\win10-x64\publish\%2.dll /ClassNames:PSE.Model.ContractAccount,PSE.Model.PaymentHistory /DefaultPropertyNameHandling:CamelCase /DefaultEnumHandling:String /Output:pseSwagger.json
         private static void Explain()
         {
             System.Console.WriteLine("GenerateTypes2SwaggerCall KeySpaceName pathToDll pathToCmdFileToGenerate");

@@ -304,7 +304,7 @@ namespace CassandraDBtoCSharp
         {
             properties.Insert(0, "");
             var classDefinition = $@"
-namespace {Utils.Utils.CSharpifyName(this.keySpaceName)}.Entities
+namespace {Utils.Utils.CSharpifyName(this.keySpaceName)}.Model
 {{
     using System;
     using System.Collections.Generic;
