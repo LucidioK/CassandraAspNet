@@ -16,6 +16,18 @@ if ($solutionFile -eq $null -or !(Test-Path $solutionFile))
 [string]$baseFolder = [System.IO.Path]::GetDirectoryName($solutionFile);
 cd $baseFolder;
 [string]$ToolsPath = Resolve-Path 'Tools';
+
+if ($DirectoryToBuild -eq '.')
+{
+    if (Test-Path $ToolsPath)
+    {
+        del "$ToolsPath\*.*";
+    }
+    else
+    {
+        md $ToolsPath;
+    }
+}
 pushd .
 $dotnet = FindExecutableInPathThrowIfNotFound 'dotnet' 'Please install dotnet core from https://www.microsoft.com/net/download/windows#core';
 
@@ -29,7 +41,7 @@ $runtime = global:GetRuntime;
 $csprojs = Get-ChildItem -Path $DirectoryToBuild -Filter '*.csproj' -Recurse;
 
 foreach ($csproj in $csprojs)
-{
+    {
 	[string]$toBuild=$csproj.DirectoryName;
     [string]$fileName=$csproj.Name;
     cd $toBuild;

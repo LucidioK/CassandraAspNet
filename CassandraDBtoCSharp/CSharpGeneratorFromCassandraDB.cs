@@ -163,7 +163,7 @@ namespace CassandraDBtoCSharp
             this.CreateUdtTypeInitializerClass();
             this.CreateSwaggerJson();
             this.CreateTypeDescriptionJson();
-            File.WriteAllText(Path.Combine(this.outputDirectory, this.keySpaceName + ".csproj"), this.csproj);
+            //File.WriteAllText(Path.Combine(this.outputDirectory, this.keySpaceName + ".csproj"), this.csproj);
         }
 
         private void CreateSwaggerJson()
@@ -278,10 +278,11 @@ namespace CassandraDBtoCSharp
         public static bool AlreadyMapped = false;
         public static void Map(Cassandra.Session session)
         {{
-            session.Execute(""use {this.keySpaceName.ToLowerInvariant()};"");
+
             if (!AlreadyMapped)
             {{
-    {string.Join("\n", mappings)}
+                session.Execute(""use {this.keySpaceName.ToLowerInvariant()};"");
+{string.Join("\n", mappings)}
             }}
             AlreadyMapped = true;
         }}";

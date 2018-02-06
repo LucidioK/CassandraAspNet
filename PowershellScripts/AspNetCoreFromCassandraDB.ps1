@@ -8,19 +8,27 @@
 pushd .
 &(join-path $PSScriptRoot 'utils.ps1');
 
+if (Test-Path $OutputDirectory)
+{
+    global:moveDirectoryToRecycleBin $OutputDirectory;
+}
+[string]$webAppZip              = Join-Path $PSScriptRoot "WebApp.zip";
+global:CreateDirectoriesIfNotExist ($OutputDirectory);
+$OutputDirectory =Resolve-Path $OutputDirectory;
+global:Unzip $webAppZip $OutputDirectory;
+
+$OutputDirectory =Join-Path $OutputDirectory "WebApp";
+
 [string]$originalPSScriptRoot   = $PSScriptRoot;
 [string]$Types2SwaggerCmd       = 'Types2Swagger.cmd';
 [string]$CassandraDBAttribute   = 'Cassandra.Mapping.Attributes.TableAttribute';
 [string]$BuildConfiguration     = "Debug";
-[string]$webAppZip              = Join-Path $PSScriptRoot "WebApp.zip";
+
 [string]$runtime                = global:GetRuntime;
 [string]$netcoreversion         = 'netcoreapp2.0';
 [string]$csproj                  =Join-Path $OutputDirectory "$KeySpaceName.csproj";
 [string]$publishDirectory       = "bin\$BuildConfiguration\$netcoreversion\$runtime\publish";
-[string]$EntitiesOutputDirectory=Join-Path $OutputDirectory "Entities";
-[string]$WebOutputDirectory     =Join-Path $OutputDirectory "Web";
-[string]$UnitTestOutputDirectory=Join-Path $OutputDirectory "UnitTest";
-[string]$TestOutputDirectory    =Join-Path $OutputDirectory "Test";
+
 [string]$currentFolder          =pwd;
 [string]$initialSwaggerFile     =Join-Path $OutputDirectory 'swaggerBase.json';
 [string]$swaggerWithOpsFile     =Join-Path $OutputDirectory 'swagger.json';
@@ -32,9 +40,7 @@ pushd .
 [string]$CreateControllerFromSwaggerWithStandardOperations =Join-Path $ToolsDirectory 'CreateControllerFromSwaggerWithStandardOperations.exe';
 
 global:AddToPathIfNeeded $ToolsDirectory;
-global:CreateDirectoriesIfNotExist ($OutputDirectory);
-global:Unzip $webAppZip $OutputDirectory;
-$OutputDirectory                =Resolve-Path $OutputDirectory;
+
 
 write-host "$CassandraDBtoCSharp $ConnectionString $KeySpaceName $OutputDirectory" -ForegroundColor DarkYellow
 # CassandraDBtoCSharp generates the class files, typeDescriptionsFile file and the initialSwaggerFile
@@ -42,6 +48,7 @@ write-host "$CassandraDBtoCSharp $ConnectionString $KeySpaceName $OutputDirector
 if (!($?)) { throw "Error running CassandraDBtoCSharp"; }
 
 cd $OutputDirectory;
+ren WebApp.csproj "$KeySpacename.csproj";
 
 Write-Host $GenerateSwaggerStandardOperations $KeySpaceName $initialSwaggerFile $typeDescriptionsFile $swaggerWithOpsFile $OAuthUrl -ForegroundColor DarkYellow;
 &$GenerateSwaggerStandardOperations ($KeySpaceName, $initialSwaggerFile, $typeDescriptionsFile, $swaggerWithOpsFile, $OAuthUrl);

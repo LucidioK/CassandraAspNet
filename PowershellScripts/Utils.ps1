@@ -1,6 +1,7 @@
 #
 # Utils.ps1
 #
+Add-Type -AssemblyName System.IO.Compression.FileSystem;
 
 [string]$global:docker="";
 function global:StartDockerContainerIfNeeded([string]$containerName)
@@ -194,4 +195,62 @@ function global:GetCassandraKeySpaceNamesFromDockerContainer([string]$CassandraD
     }
     $keySpaceNames = ($keySpaceNames -replace ' +',' ').Split(' ');
     return $keySpaceNames;
+}
+
+function global:Unzip([string]$zipfile, [string]$outpath)
+{
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath);
+}
+
+function global:moveDirectoryToRecycleBin([string]$folderName)
+{
+    $folderName = Resolve-Path $folderName;
+    $parentFolder = (resolve-path (join-path $folderName "..")).Path;
+    $lastPathItem = [System.IO.Path]::GetFileName($folderName);
+    if ($parentFolder -eq $folderName)
+    {
+        throw "Cannot move $folderName to recycle bin.";
+    }
+    $shell = new-object -comobject "Shell.Application";
+    $folder = $shell.Namespace($parentFolder);
+    $item = $folder.ParseName($lastPathItem);
+    $item.InvokeVerb("delete");
+}
+
+function global:revertString([string]$s)
+{
+    [string]$r = "";
+    foreach ($c in $s.ToCharArray()) { $r = ($c + $r); }
+    return $r;
+}
+
+function global:revertAndLowerString([string]$s)
+{
+    $s = $s.ToLowerInvariant();
+    [string]$r = "";
+    foreach ($c in $s.ToCharArray()) { $r = ($c + $r); }
+    return $r;
+}
+
+function global:getFileListWithoutRepeatedFiles($pathList)
+{
+    $fileList = @();
+    foreach ($path in $pathList)
+    {
+        Get-ChildItem -Path $path | 
+            foreach { $fileList = $fileList + (global:revertAndLowerString $_.FullName); } 
+    }
+    $fileList = $fileList | Sort-Object;
+    $finalList = @();
+    $previousInvName="!!!!";
+    foreach ($file in $fileList)
+    {
+        [string]$fn = $file;
+        $invName=$fn.Split('\')[0];
+        if ($previousInvName -ne $invName)
+        {
+            $finalList = ($finalList + (global:revertAndLowerString $fn));
+        }
+    }
+    return $finalList;
 }

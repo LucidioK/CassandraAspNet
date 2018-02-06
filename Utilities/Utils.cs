@@ -217,10 +217,12 @@ namespace Utils
         {
             var files = Directory.EnumerateFiles(directory, filter, SearchOption.AllDirectories);
             Parallel.ForEach(files, file =>
+            //foreach (var file in files)
             {
                 var text = File.ReadAllText(file);
-                text = text.Replace(oldText, newText);
-                File.WriteAllText(file, text);
+                var replaced = text.Replace(oldText, newText);
+                System.Diagnostics.Debug.WriteLine($"--> {file} {oldText} {newText}");
+                File.WriteAllText(file, replaced);
             });
         }
     }
