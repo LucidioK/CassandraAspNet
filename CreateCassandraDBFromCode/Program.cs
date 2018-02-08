@@ -53,7 +53,7 @@ namespace CreateCassandraDBFromCode
         {
             System.Console.WriteLine(
 @"
-CreateCassandraDBFromCode ConnectionString AssemblyPath KeySpaceName
+CreateCassandraDBFromCode connectionStringOrLocalSettingsJsonFile AssemblyPath KeySpaceName
 
  Creates a Cassandra DB from a .Net assembly.
 

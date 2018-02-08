@@ -23,7 +23,7 @@ namespace ^NamespaceBase^
 	
     public class Constants
     {	  
-		public static string ConnectionString = ""^ConnectionString^"";
+		public static string connectionStringOrLocalSettingsJsonFile = ""^connectionStringOrLocalSettingsJsonFile^"";
 
         public static int MaximumNumberOfRows = ^MaximumNumberOfRows^;
 
@@ -85,7 +85,7 @@ namespace ^NamespaceBase^.V^ApiVersion^.Controllers
             _config = appSettings.Value;
             _cache = cache;
             _logger = logger;
-			_session = (Session)Cluster.Builder().WithConnectionString(Constants.ConnectionString).Build().Connect();
+			_session = (Session)Cluster.Builder().WithConnectionString(Constants.connectionStringOrLocalSettingsJsonFile).Build().Connect();
             UdtMapping.Map(_session);
         }
 		

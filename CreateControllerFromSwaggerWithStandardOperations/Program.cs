@@ -25,7 +25,7 @@ namespace CreateControllerFromSwaggerWithStandardOperations
         {
             System.Console.WriteLine(
 @"
-CreateControllerFromSwaggerWithStandardOperations SwaggerWithStandardOperationsJson ConnectionString ApiVersion MaxNumberOfRows CSProjFile typeDescriptionsJson
+CreateControllerFromSwaggerWithStandardOperations SwaggerWithStandardOperationsJson connectionStringOrLocalSettingsJsonFile ApiVersion MaxNumberOfRows CSProjFile typeDescriptionsJson
 
 Creates controller classes for swagger file generaged by GenerateSwaggerStandardOperations.
 

@@ -15,7 +15,7 @@ namespace cqlExec
                 Console.WriteLine(@"
 
 
-cqlExec ConnectionString cqlStatement
+cqlExec connectionStringOrLocalSettingsJsonFile cqlStatement
 Example:
 cqlExec ""Contact Points = localhost; Port = 9042"" ""describe keyspaces;""
 

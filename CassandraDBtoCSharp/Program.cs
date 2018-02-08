@@ -25,7 +25,7 @@ namespace CassandraDBtoCSharp
         {
             System.Console.WriteLine(
 @"
-CassandraDBtoCSharp %ConnectionString% %KeySpaceName% %OutputDirectory%
+CassandraDBtoCSharp connectionStringOrLocalSettingsJsonFile KeySpaceName OutputDirectory
 
 Creates model classes from Cassandra DB, .
 

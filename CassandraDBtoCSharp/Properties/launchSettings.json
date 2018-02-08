@@ -2,7 +2,7 @@
   "profiles": {
     "CassandraDBtoCSharp": {
       "commandName": "Project",
-      "commandLineArgs": "\"Contact Points = localhost; Port = 9042\" PetStore c:\\Temp\\PetStoreClasses"
+      "commandLineArgs": "C:\\dsv\\payment\\src\\localConfiguration.json microservices c:\\Temp\\microservices"
     }
   }
 }

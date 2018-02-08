@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CassandraCSharpDriver" Version="3.4.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="Swagger.ObjectModel" Version="2.2.51-alpha" />
   </ItemGroup>

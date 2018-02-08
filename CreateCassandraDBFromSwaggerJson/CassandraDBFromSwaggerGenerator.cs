@@ -10,18 +10,18 @@ namespace CreateCassandraDBFromSwaggerJson
 {
     class CassandraDBFromSwaggerGenerator
     {
-        string connectionString;
+        string connectionStringOrLocalSettingsJsonFile;
         string swaggerFileName;
         static List<string> userDefinedTypes = new List<string>();
-        public CassandraDBFromSwaggerGenerator(string connectionString, string swaggerFileName)
+        public CassandraDBFromSwaggerGenerator(string connectionStringOrLocalSettingsJsonFile, string swaggerFileName)
         {
-            this.connectionString = connectionString;
+            this.connectionStringOrLocalSettingsJsonFile = connectionStringOrLocalSettingsJsonFile;
             this.swaggerFileName = swaggerFileName;
         }
 
         public void Generate()
         {
-            var session = (Session)Cluster.Builder().WithConnectionString(connectionString).Build().Connect();
+            var session = Utils.CassandraUtils.OpenCassandraSession(connectionStringOrLocalSettingsJsonFile);
             var b = new Builder();
             var cassandraDBFromSwagger = new CassandraDBFromSwagger.CassandraDBFromSwagger(this.swaggerFileName);
             var cqlStatements = cassandraDBFromSwagger.Generate();

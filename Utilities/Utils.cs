@@ -42,6 +42,9 @@ namespace Utils
         public static bool InvariantStartsWith(string str, string starts) => 
             str.StartsWith(starts, StringComparison.InvariantCultureIgnoreCase);
 
+        public static bool InvariantContains(string str, string toFind) =>
+            str.ToLowerInvariant().Contains(toFind.ToLowerInvariant());
+
         public static SwaggerRoot LoadSwagger(string swaggerJsonFileName)
         {
             var swaggerInputText = PreprocessSwaggerFile(File.ReadAllText(swaggerJsonFileName));

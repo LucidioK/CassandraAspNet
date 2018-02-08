@@ -246,7 +246,7 @@ function global:getFileListWithoutRepeatedFiles($pathList)
     foreach ($file in $fileList)
     {
         [string]$fn = $file;
-        $invName=$fn.Split('\')[0];
+        $invName=$fn.Split('\')[0];work
         if ($previousInvName -ne $invName)
         {
             $finalList = ($finalList + (global:revertAndLowerString $fn));
@@ -254,3 +254,6 @@ function global:getFileListWithoutRepeatedFiles($pathList)
     }
     return $finalList;
 }
+
+
+

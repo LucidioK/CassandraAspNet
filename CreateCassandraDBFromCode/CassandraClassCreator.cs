@@ -60,9 +60,9 @@ namespace CreateCassandraDBFromCode
 
         }
 
-        public void Initialize(string connectionString, string keySpaceName, Assembly assembly)
+        public void Initialize(string connectionStringOrLocalSettingsJsonFile, string keySpaceName, Assembly assembly)
         {
-            this.session = (Session)Cluster.Builder().WithConnectionString(connectionString).Build().Connect();
+            this.session = Utils.CassandraUtils.OpenCassandraSession(connectionStringOrLocalSettingsJsonFile);
             this.keySpaceName = keySpaceName;
             this.assembly = assembly;
             try

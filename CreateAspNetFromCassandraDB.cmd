@@ -25,7 +25,7 @@ if not [%errorlevel%]==[0] goto :oops
 call :CheckIfExists nswag  "Please install nswag with npm install nswag -g"
 if not [%errorlevel%]==[0] goto :oops
 
-set ConnectionString=%1
+set connectionStringOrLocalSettingsJsonFile=%1
 set KeySpaceName=%2
 set OutputDirectory=%~f3
 rem set UpperKeySpaceName=%KeySpaceName%
@@ -49,9 +49,9 @@ if not exist %TestOutputDirectory%     md %TestOutputDirectory%
 
 pushd .
 echo .
-echo %BlkBkgYelFgd% %currentFolder%\tools\CassandraDBtoCSharp.exe %ConnectionString% %KeySpaceName% %OutputDirectory%  %EndColor%
+echo %BlkBkgYelFgd% %currentFolder%\tools\CassandraDBtoCSharp.exe %connectionStringOrLocalSettingsJsonFile% %KeySpaceName% %OutputDirectory%  %EndColor%
 echo .
-%currentFolder%\tools\CassandraDBtoCSharp.exe %ConnectionString% %KeySpaceName% %OutputDirectory%
+%currentFolder%\tools\CassandraDBtoCSharp.exe %connectionStringOrLocalSettingsJsonFile% %KeySpaceName% %OutputDirectory%
 
 if not errorlevel==0 goto :oops
 rem pause
@@ -86,9 +86,9 @@ rem pause
 
 rem call nswag swagger2cscontroller /ControllerBaseClass:Controller /AspNetNamespace:Microsoft.AspNetCore.Mvc /Input:%KeySpaceName%Swagger.json /Output:controller\%KeySpaceName%Controller.cs /ClassName:%KeySpaceName%Controller /Namespace:%UpperKeySpaceName%.Controllers
 echo .
-echo %BlkBkgYelFgd% %currentFolder%\tools\CreateControllerFromSwaggerWithStandardOperations.exe %swaggerWithOpsFile% %ConnectionString% 1 24 %csproj% %OutputDirectory%\typeDescriptions.json  %EndColor%
+echo %BlkBkgYelFgd% %currentFolder%\tools\CreateControllerFromSwaggerWithStandardOperations.exe %swaggerWithOpsFile% %connectionStringOrLocalSettingsJsonFile% 1 24 %csproj% %OutputDirectory%\typeDescriptions.json  %EndColor%
 echo .
-%currentFolder%\tools\CreateControllerFromSwaggerWithStandardOperations.exe %swaggerWithOpsFile% %ConnectionString% 1 24 %csproj% %OutputDirectory%\typeDescriptions.json
+%currentFolder%\tools\CreateControllerFromSwaggerWithStandardOperations.exe %swaggerWithOpsFile% %connectionStringOrLocalSettingsJsonFile% 1 24 %csproj% %OutputDirectory%\typeDescriptions.json
 if not errorlevel==0 goto :oops
 rem pause
 

@@ -71,9 +71,9 @@ namespace CassandraDBtoCSharp
         private Dictionary<Cassandra.ColumnTypeCode, Func<ColumnDescOrTableColumn, string>> cassandraToCSharpTypeEquivalency;
         private bool isFrozen = false;
 
-        public CSharpGeneratorFromCassandraDB(string connectionString, string keySpaceName, string outputDirectory)
+        public CSharpGeneratorFromCassandraDB(string connectionStringOrLocalSettingsJsonFile, string keySpaceName, string outputDirectory)
         {
-            this.session = (Session)Cluster.Builder().WithConnectionString(connectionString).Build().Connect();
+            this.session = Utils.CassandraUtils.OpenCassandraSession(connectionStringOrLocalSettingsJsonFile);
             this.swaggerRoot.Definitions = new Dictionary<string, Schema>();
             this.swaggerRoot.Info = new Info { Title = keySpaceName, Version = "" };
             this.swaggerRoot.Schemes = new List<Schemes>();

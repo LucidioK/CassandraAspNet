@@ -22,7 +22,7 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             public string FilterParametersWithPrecedingComa { get; set; }
             public string PrimaryKeyColumnName { get; set; }
             public string OptionalRowFilteringCode { get; set; }
-            public string ConnectionString { get; set; }
+            public string connectionStringOrLocalSettingsJsonFile { get; set; }
             public string MaximumNumberOfRows { get; set; }
             public string ProducesResponseAttributes { get; set; }
             public string HttpReturnCode { get; set; }
@@ -80,7 +80,7 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             replacementParameters.ApiVersion = this.apiVersion.ToString();
             replacementParameters.MaximumNumberOfRows = this.maxNumberOfRows.ToString();
             replacementParameters.NamespaceBase = controllerNameSpace;
-            replacementParameters.ConnectionString = this.connectionString;
+            replacementParameters.connectionStringOrLocalSettingsJsonFile = this.connectionString;
             foreach (var path in swaggerRoot.Paths)
             {
                 CreateController(path.Key, path.Value);

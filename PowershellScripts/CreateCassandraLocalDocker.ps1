@@ -3,17 +3,14 @@
 [string]$docker                 = FindExecutableInPathThrowIfNotFound 'docker' 'Please install &$docker';
 
 Write-Host 'starting the CassandraLocal container, from scratch';
-$hasCassandraContainer=(docker container ls | foreach { $_ -replace '  +', ';' } | foreach { $_.Split(';')[6] }).Contains('CassandraLocal');
-if ($hasCassandraContainer)
-{
-    &$docker ('container', 'rm', 'CassandraLocal', '--force');
-}
+&$docker ('container', 'rm', 'CassandraLocal');
+
 $hasCassandraImage=(docker image ls | foreach { $_ -replace '  +', ';' } | foreach { $_.Split(';')[0] }).Contains('cassandra');
 if (!($hasCassandraImage))
 {
     &$docker ('pull','cassandra');
 }
-&$docker ('run', '--name', 'CassandraLocal', '-it', '-d', '-p', '9042:9042', 'cassandra:3.11')
+&$dockercassandrapush ('run', '--name', 'CassandraLocal', '-it', '-d', '-p', '9042:9042', 'cassandra:3.11')
 &$docker ('exec', '--privileged', '-it', 'CassandraLocal', 'apt',  'update')
 
 Write-Host 'Opening port 9042 in the docker container.' 
