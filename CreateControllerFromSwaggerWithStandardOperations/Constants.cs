@@ -23,7 +23,7 @@ namespace ^NamespaceBase^
 	
     public class Constants
     {	  
-		public static string connectionStringOrLocalSettingsJsonFile = ""^connectionStringOrLocalSettingsJsonFile^"";
+		public static string connectionStringOrLocalSettingsJsonFile = @""^connectionStringOrLocalSettingsJsonFile^"";
 
         public static int MaximumNumberOfRows = ^MaximumNumberOfRows^;
 
@@ -93,7 +93,7 @@ namespace ^NamespaceBase^.V^ApiVersion^.Controllers
         [HttpGet(""^EntityNameCamelCase^"")]
         public async Task<IActionResult> Get^EntityName^(^FilterParameters^)
         {
-			return await Get(null);
+			return await Get(null^FilterParametersNamesOnlyWithPrecedingComa^);
 		}
 
 		
@@ -101,10 +101,10 @@ namespace ^NamespaceBase^.V^ApiVersion^.Controllers
         [HttpGet(""^EntityNameCamelCase^/{id}"")]
         public async Task<IActionResult> Get^EntityName^ById(^PrimaryKeyColumnType^ id^FilterParametersWithPrecedingComa^)
         {
-			return await Get(id);
+			return await Get(id^FilterParametersNamesOnlyWithPrecedingComa^);
 		}
 		
-		private async Task<IActionResult> Get(^PrimaryKeyColumnType^? id^FilterParametersWithPrecedingComa^)
+		private async Task<IActionResult> Get(^PrimaryKeyColumnType^ id^FilterParametersWithPrecedingComa^)
         {
 			try
 			{

@@ -2,7 +2,7 @@
   "profiles": {
     "CreateControllerFromSwaggerWithStandardOperations": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\temp\\PetStore\\WebApp\\swagger.json \"Contact Points = localhost; Port = 9042\" 1 24 C:\\temp\\PetStore\\WebApp\\PetStore.csproj C:\\temp\\PetStore\\WebApp\\typeDescriptions.json"
+      "commandLineArgs": "C:\\temp\\ms01\\WebApp\\swagger.json C:\\dsv\\payment\\src\\localConfiguration.json 1 24 C:\\temp\\ms01\\WebApp\\microservices.csproj C:\\temp\\ms01\\WebApp\\typeDescriptions.json"
     }
   }
 }

@@ -1,5 +1,5 @@
 ﻿param(
-    [parameter(Mandatory=$True, Position=0)][string]$ConnectionString = "Contact Points = localhost; Port = 9042",
+    [parameter(Mandatory=$True, Position=0)][string]$ConnectionStringOrLocalConfigurationJsonFile = "Contact Points = localhost; Port = 9042",
     [parameter(Mandatory=$True, Position=1)][string]$KeySpaceName     = "PetStore",
     [parameter(Mandatory=$True, Position=2)][string]$OutputDirectory  = "c:\temp\PetStore",
     [parameter(Mandatory=$True, Position=2)][string]$OAuthUrl         = "http://some.url"
@@ -7,6 +7,16 @@
 )
 pushd .
 &(join-path $PSScriptRoot 'utils.ps1');
+
+if (!($ConnectionStringOrLocalConfigurationJsonFile.Contains('=')) -and (Test-Path $ConnectionStringOrLocalConfigurationJsonFile))
+{
+    $ConnectionStringOrLocalConfigurationJsonFile = Resolve-Path $ConnectionStringOrLocalConfigurationJsonFile;
+    Write-Host "Using configuration file $ConnectionStringOrLocalConfigurationJsonFile." -ForegroundColor Green;
+}
+else
+{
+    Write-Host "Using connection string '$ConnectionStringOrLocalConfigurationJsonFile'." -ForegroundColor Green;
+}
 
 if (Test-Path $OutputDirectory)
 {
@@ -26,7 +36,7 @@ $OutputDirectory =Join-Path $OutputDirectory "WebApp";
 
 [string]$runtime                = global:GetRuntime;
 [string]$netcoreversion         = 'netcoreapp2.0';
-[string]$csproj                  =Join-Path $OutputDirectory "$KeySpaceName.csproj";
+[string]$csproj                  =Join-Path $OutputDirectory "webapp.csproj";
 [string]$publishDirectory       = "bin\$BuildConfiguration\$netcoreversion\$runtime\publish";
 
 [string]$currentFolder          =pwd;
@@ -42,20 +52,19 @@ $OutputDirectory =Join-Path $OutputDirectory "WebApp";
 global:AddToPathIfNeeded $ToolsDirectory;
 
 
-write-host "$CassandraDBtoCSharp $ConnectionString $KeySpaceName $OutputDirectory" -ForegroundColor DarkYellow
+write-host "$CassandraDBtoCSharp $ConnectionStringOrLocalConfigurationJsonFile $KeySpaceName $OutputDirectory" -ForegroundColor DarkYellow
 # CassandraDBtoCSharp generates the class files, typeDescriptionsFile file and the initialSwaggerFile
-&$CassandraDBtoCSharp ($ConnectionString, $KeySpaceName, $OutputDirectory);
+&$CassandraDBtoCSharp ($ConnectionStringOrLocalConfigurationJsonFile, $KeySpaceName, $OutputDirectory);
 if (!($?)) { throw "Error running CassandraDBtoCSharp"; }
 
 cd $OutputDirectory;
-ren WebApp.csproj "$KeySpacename.csproj";
 
 Write-Host $GenerateSwaggerStandardOperations $KeySpaceName $initialSwaggerFile $typeDescriptionsFile $swaggerWithOpsFile $OAuthUrl -ForegroundColor DarkYellow;
 &$GenerateSwaggerStandardOperations ($KeySpaceName, $initialSwaggerFile, $typeDescriptionsFile, $swaggerWithOpsFile, $OAuthUrl);
 if (!($?)) { throw "GenerateSwaggerStandardOperations failed."; }
 
-Write-Host $CreateControllerFromSwaggerWithStandardOperations $swaggerWithOpsFile $ConnectionString 1 24 $csproj $typeDescriptionsFile  -ForegroundColor DarkYellow;
-&$CreateControllerFromSwaggerWithStandardOperations ( $swaggerWithOpsFile, $ConnectionString, 1, 24, $csproj, $typeDescriptionsFile);
+Write-Host $CreateControllerFromSwaggerWithStandardOperations $swaggerWithOpsFile $ConnectionStringOrLocalConfigurationJsonFile 1 24 $csproj $typeDescriptionsFile  -ForegroundColor DarkYellow;
+&$CreateControllerFromSwaggerWithStandardOperations ( $swaggerWithOpsFile, $ConnectionStringOrLocalConfigurationJsonFile, 1, 24, $csproj, $typeDescriptionsFile);
 if (!($?)) { throw "CreateControllerFromSwaggerWithStandardOperations failed."; }
 
 Write-Host 'Done' -ForegroundColor Green;

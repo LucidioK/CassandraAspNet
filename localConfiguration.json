@@ -1,0 +1,37 @@
+﻿{
+  "IdentityProviders": [
+    {
+      "Issuer": "https://cognito-idp.us-west-2.amazonaws.com/us-west-2_Zfg0fUSpS",
+      "Modulus": "wrmEp5cE4XiKG5DQB4rVIn-pxgoh-MmtRtGbJACPEJabKeA283OqcI1qEP6hQqTibrvQpKoNAKTskx6ircp4LSCHUnyD2yprg-OdKwWJJhWs4zYJcEXMos31Qoe2Sxl6GaiY6ptDKfyDiYbHiBrYYb2zWu4wO5vSostIbieRVLTwhRN0j9fcWKr3Cw-wtp82a8YRy_y8C677JY0Ty0iGfonhTgDWG34oYYZwCXSvGCtIZFN21zBGTz77HDK5DZnqFaYlgzi94J7tHo7NbGbqUhQOQc_jEc7MlN9WwAcjZMURE586CEqclfYzH-AQcHRKqpEN-kTCWkCSFX-Vk3wZKw",
+      "Expo": "AQAB"
+    },
+    {
+      "Issuer": "https://cognito-idp.us-west-2.amazonaws.com/us-west-2_Zfg0fUSpS",
+      "Modulus": "lrE2pZctPUDh7sh6bZmGXd7_iOB-646dyjsYl9x0rYB_OoI3c-n5sbd-Hbx-qO-mVcXAfe4RWCBzFxla3y10tfsbaI_yCBUaH9YV6rQTajvMxGE6t_xPeKylZogwBABOpXF-Byq89z6OxY3kNNreoROxWQrtS2aA2JXW1inxoco6xiN9GMyd14O8X7eksOtfjo4OzicMoc5YrW6YAgcr75iswDx4N5oJr1RgqmoLtTrsXtwyJBsgvs4QCLtVdNOpNqZlUHGSYfg2FSJns1SEf0ZwTIUwfsgkIaRhGD0PRPWckUqwWerQV6sjKddo6WhqTlfgZU4NivzuUC8BhIYbFw",
+      "Expo": "AQAB"
+    }
+  ],
+  "CassandraSettings": {
+    "Hosts": [
+      {
+        "HostName": "10.128.42-204",
+        "IpAddress": "10.128.42.204"
+      },
+      {
+        "HostName": "10.128.42-114",
+        "IpAddress": "10.128.42.114"
+      },
+      {
+        "IpAddress": "10.128.45.50"
+      }
+    ],
+    "Port": 9042,
+    "ClusterUser": "cassandra_dev",
+    "ClusterPassword": "Electric-Camel-76",
+    "ConsistencyLevel": "Quorum",
+    "UseClusterCredentials": true,
+    "UseSSL": true,
+    "UseQueryOptions": true,
+    "MaxConnectionsPerHost": 1000
+  }
+}

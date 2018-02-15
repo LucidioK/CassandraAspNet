@@ -1,0 +1,2 @@
+﻿#.\PowershellScripts\CreateToolsFolder.ps1 
+.\PowershellScripts\AspNetCoreFromCassandraDB.ps1 -ConnectionString .\localConfiguration.json -KeySpaceName microservices -OutputDirectory C:\Temp\pseMicroservices -OAuthUrl 'xuxu'

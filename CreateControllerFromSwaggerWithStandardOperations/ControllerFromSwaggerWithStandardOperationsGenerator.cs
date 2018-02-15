@@ -20,6 +20,7 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             public string FilterParameters { get; set; }
             public string PrimaryKeyColumnType { get; set; }
             public string FilterParametersWithPrecedingComa { get; set; }
+            public string FilterParametersNamesOnlyWithPrecedingComa { get; set; }
             public string PrimaryKeyColumnName { get; set; }
             public string OptionalRowFilteringCode { get; set; }
             public string connectionStringOrLocalSettingsJsonFile { get; set; }
@@ -29,7 +30,6 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             public string FilteringFieldCamelCase { get; set; }
             public string FilteringField { get; set; }
             public string Quote { get; set; }
-
         }
 
         ReplacementParameters replacementParameters = new ReplacementParameters();
@@ -44,10 +44,10 @@ namespace CreateControllerFromSwaggerWithStandardOperations
         List<Utils.TypeDescription> typeDescriptions;
 
         public ControllerFromSwaggerWithStandardOperationsGenerator(
-            string swaggerWithStandardOperationsJson, 
-            string connectionString, 
-            int apiVersion, 
-            int maxNumberOfRows, 
+            string swaggerWithStandardOperationsJson,
+            string connectionString,
+            int apiVersion,
+            int maxNumberOfRows,
             string csProjFile,
             string typeDescriptionsFile)
         {
@@ -91,8 +91,6 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             Utils.Utils.ReplaceInFiles(this.csProjDirectory, "*.cs", "using WebApp", $"using {replacementParameters.NamespaceBase}");
         }
 
-
-
         private void CreateController(string key, PathItem pathItem)
         {
             replacementParameters.EntityName = key.Split('/')[1];
@@ -115,25 +113,39 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             replacementParameters.FilterParameters = "";
             replacementParameters.OptionalRowFilteringCode = "";
             var filterParameters = new StringBuilder();
+            var filterParametersNamesOnly = new StringBuilder();
             var rowFilteringCode = new StringBuilder();
+
             foreach (var queryParameter in queryParameters)
             {
+                string type = GetParameterTypeFromParameter(queryParameter);
+
+                if (type == null)
+                {
+                    continue;
+                }
                 if (filterParameters.Length > 0)
                 {
                     filterParameters.Append(", ");
+                    filterParametersNamesOnly.Append(", ");
                 }
-                filterParameters.Append(GetParameterTypeFromParameter(queryParameter));
-                filterParameters.Append("? ");
+
+                filterParameters.Append(type);
+                filterParameters.Append(" ");
                 filterParameters.Append(queryParameter.Name);
                 filterParameters.Append(" = null");
 
+                filterParametersNamesOnly.Append(queryParameter.Name);
                 rowFilteringCode.AppendLine(CreateRowFilteringCodeLine(queryParameter));
             }
+
+            replacementParameters.FilterParametersNamesOnlyWithPrecedingComa = filterParametersNamesOnly.ToString();
             replacementParameters.FilterParameters = filterParameters.ToString();
             replacementParameters.OptionalRowFilteringCode = rowFilteringCode.ToString();
             if (replacementParameters.FilterParameters.Length > 0)
             {
                 replacementParameters.FilterParametersWithPrecedingComa = ", " + replacementParameters.FilterParameters;
+                replacementParameters.FilterParametersNamesOnlyWithPrecedingComa = "," + replacementParameters.FilterParametersNamesOnlyWithPrecedingComa;
             }
         }
 
@@ -142,12 +154,14 @@ namespace CreateControllerFromSwaggerWithStandardOperations
             replacementParameters.FilteringField = Utils.Utils.CSharpifyName(queryParameter.Name);
             replacementParameters.FilteringFieldCamelCase = Utils.Utils.CamelCase(queryParameter.Name);
             replacementParameters.Quote = "";
+
             var type = GetParameterTypeFromParameter(queryParameter);
+
             if (type == "string" || type == "DateTime")
             {
                 replacementParameters.Quote = "'";
             }
-            
+
             return RunReplacements(Constants.RowFilteringCode, replacementParameters);
         }
 
@@ -160,17 +174,18 @@ namespace CreateControllerFromSwaggerWithStandardOperations
                     .First(t => t.CSharpName == replacementParameters.EntityName)
                     ?.ColumnDescriptions
                     ?.First(c => c.IsPartitionKey);
+
             if (pathParameters != null && pathParameters.Any() && primaryColumnDescription != null)
             {
                 replacementParameters.PrimaryKeyColumnName = primaryColumnDescription.CSharpName;
                 replacementParameters.PrimaryKeyColumnType = primaryColumnDescription.CSharpType;
             }
-
         }
 
         private string CreateProducesResponseAttributes(PathItem pathItem)
         {
             var producesResponseAttributes = new StringBuilder();
+
             foreach (var response in pathItem.Get.Responses)
             {
                 replacementParameters.HttpReturnCode = response.Key;
@@ -185,7 +200,7 @@ namespace CreateControllerFromSwaggerWithStandardOperations
         {
             foreach (var property in replacementParameters.GetType().GetTypeInfo().GetProperties())
             {
-                var slug = "^"+property.Name+"^";
+                var slug = "^" + property.Name + "^";
                 var value = (string)(property.GetValue(replacementParameters) ?? "");
                 str = str.Replace(slug, value);
             }
@@ -194,22 +209,33 @@ namespace CreateControllerFromSwaggerWithStandardOperations
 
         private static string GetParameterTypeFromParameter(Parameter parameter)
         {
-            if (parameter.Format == null && parameter.Type == "string")
+            if ((parameter.Format == null && parameter.Type == "string")
+                ||
+                (parameter.Format == null && parameter.Type == null))
             {
                 return "string";
+            }
+            switch (parameter.Type)
+            {
+                case "boolean":
+                    return "bool?";
+            }
+            if (parameter.Format == null)
+            {
+                return null;
             }
             switch (parameter.Format.ToLowerInvariant())
             {
                 case "int64":
-                    return "long";
+                    return "long?";
                 case "int32":
-                    return "int";
+                    return "int?";
                 case "int16":
-                    return "short";
+                    return "short?";
                 case "int8":
                     return "byte";
                 case "date-time":
-                    return "DateTime";
+                    return "DateTime?";
                 default:
                     return null;
             }
