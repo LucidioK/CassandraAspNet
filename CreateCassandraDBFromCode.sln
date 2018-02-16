@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2020
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CreateCassandraDBFromCode", "CreateCassandraDBFromCode\CreateCassandraDBFromCode.csproj", "{4B8EE120-8A97-4315-9891-C5DDED4E4926}"
 EndProject
@@ -37,7 +37,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CassandraDBFromSwagger", "C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CassandraDBCreateCommandsFromSwaggerJson", "CassandraDBCreateCommandsFromSwaggerJson\CassandraDBCreateCommandsFromSwaggerJson.csproj", "{DF853DA5-FC9B-4451-85D7-F4AD953116FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cqlExec", "cqlExec\cqlExec.csproj", "{DA18FAD8-C915-4016-B931-04E62C3CD33F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cqlExec", "cqlExec\cqlExec.csproj", "{DA18FAD8-C915-4016-B931-04E62C3CD33F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
