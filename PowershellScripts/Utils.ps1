@@ -4,6 +4,131 @@
 Add-Type -AssemblyName System.IO.Compression.FileSystem;
 
 [string]$global:docker="";
+[string]$global:curl  ="";
+
+function global:GetBasicAuthorizationHeaderValue([string]$userName,[string]$password)
+{
+    $pair = "${userName}:${password}";
+    $bytes = [System.Text.Encoding]::ASCII.GetBytes($pair);
+    $base64 = [System.Convert]::ToBase64String($bytes);
+    return "Basic $base64";
+}
+
+function global:httpGetWithBasicAuth([string]$uri, [string]$userName,[string]$password, [string]$desiredFormat='application/xml')
+{
+    $basicAuthValue = global:GetBasicAuthorizationHeaderValue $userName $password;
+    $headers = @{ Authorization = $basicAuthValue; Accept=$desiredFormat };
+    $iwrr=Invoke-WebRequest -UseBasicParsing -Uri $uri -Headers $headers;
+    if ($iwrr.StatusCode -ge 200 -and $iwrr.StatusCode -lt 300)
+    {
+        return $iwrr.Content;
+    }
+    return $iwrr;
+}
+
+function global:httpGetWithBasicAuthAsXml([string]$uri, [string]$userName,[string]$password)
+{
+    $content = global:httpGetWithBasicAuth $uri $userName $password 'application/xml';
+    if ($content -ne $null -and $content.GetTypeCode() -eq 'String')
+    {
+        [xml]$xml=$content;
+        return $xml;
+    }
+    return $null;
+}
+
+function global:httpGetWithBasicAuthAsJson([string]$uri, [string]$userName,[string]$password)
+{
+    $content = global:httpGetWithBasicAuth $uri $userName $password 'application/json';
+    if ($content -ne $null -and $content.GetTypeCode() -eq 'String')
+    {
+        $json=$content | ConvertFrom-Json;
+        return $json;
+    }
+    return $null;
+}
+
+
+function global:getEndPointsFromAtomsPubAccordingToTitle([string]$uri, [string]$userName,[string]$password, [string]$title)
+{
+    $atomsPubTxt = global:httpGetWithBasicAuth $uri $userName $password;
+    if ($atomsPubTxt -eq $null -or $atomsPubTxt.GetTypeCode() -ne 'String')
+    {
+        throw "Could not retrieve AtomsPub data from $uri";
+    }
+    [xml]$atomsPub = $atomsPubTxt;
+    $entries=$atomsPub.feed.GetElementsByTagName('entry');
+    $result=@();
+    foreach ($entry in $entries)
+    { 
+        $links = $entry.GetElementsByTagName('link'); 
+        $pal = $links | where { $_.title -eq $title };
+        try
+        {
+            $result = $result + $pal.href;
+        }
+        catch{}
+    }
+    return $result;
+}
+
+
+function global:getModifiedFiles()
+{
+    $git = global:GetGit;
+    $gr=&$git ('status', '--porcelain') | foreach { Resolve-Path ([string]$_).Substring(3).Replace('/','\').Trim('"') -ErrorAction Ignore }
+    return $gr;
+}
+
+function global:SaveChangedFiles()
+{
+    global:RemoveDirectoryIfNeeded 'SavedFiles';
+
+    global:CreateDirectoryIfNeded 'SavedFiles';
+    [string]$destinationBasePath = Resolve-Path 'SavedFiles';
+    $modified = global:getModifiedFiles;
+    [string]$basePath = pwd;
+    foreach ($path in $modified)
+    {
+        $withoutBasePath = $path.Path.SubString($basePath.Length+1);
+        $destinationPath = Join-Path $destinationBasePath $withoutBasePath;
+        if ((Get-Item $path) -is [System.IO.DirectoryInfo])
+        {
+            global:CreateDirectoryIfNeded $destinationPath;
+            Copy-Item -Recurse -Path $path -Destination $destinationPath -Container;
+        }
+        else
+        {
+            $destinationDirectoryPath = [System.IO.Path]::GetDirectoryName($destinationPath);
+            global:CreateDirectoryIfNeded $destinationDirectoryPath;
+            Copy-Item -Path $path -Destination $destinationPath;
+        }
+    }
+    $zipFile = [System.IO.Path]::GetFileNameWithoutExtension($x.Path) ;
+    $zipFile = $zipFile + ((Get-Date).ToString("yyyyMMddhhmmss"));
+    $zipFile = $zipFile + ".zip";
+    $zipFile = join-path $env:TEMP $zipFile; 
+    [System.IO.Compression.ZipFile]::CreateFromDirectory($destinationBasePath, $zipFile);
+    global:RemoveDirectoryIfNeeded 'SavedFiles';
+    return $zipFile;
+}
+
+function global:CreateDirectoryIfNeded($path)
+{
+    if (!(Test-Path $path))
+    {
+        md $path;
+    }
+}
+
+function global:RemoveDirectoryIfNeeded($path)
+{
+    if (test-path $path)
+    {
+        Remove-Item -Path $path -Recurse -Force;
+    }
+}
+
 function global:StartDockerContainerIfNeeded([string]$containerName)
 {
     [string]$docker = global:GetDocker;
@@ -176,6 +301,15 @@ function global:listUnion($l1, $l2)
     return $lr;
 }
 
+function global:GetGit()
+{
+    if ($global:git -eq $null -or $global:git.Length -eq 0)      
+    { 
+        $global:git      = FindExecutableInPathThrowIfNotFound 'git' 'Please install git';
+    }
+    return $global:git;
+}
+
 function global:GetDocker()
 {
     if ($global:docker.Length -eq 0)
@@ -183,6 +317,15 @@ function global:GetDocker()
         $global:docker = FindExecutableInPathThrowIfNotFound 'docker' 'Please install docker';
     }
     return $global:docker;
+}
+
+function global:GetCurl()
+{
+    if ($global:curl -eq $null -or $global:curl.Length -eq 0)
+    {
+        $global:curl = FindExecutableInPathThrowIfNotFound 'curl' 'Please install curl from https://curl.haxx.se/download.html';
+    }
+    return $global:curl;
 }
 
 function global:GetCassandraKeySpaceNamesFromDockerContainer([string]$CassandraDockerContainer)
