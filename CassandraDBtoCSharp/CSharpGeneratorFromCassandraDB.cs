@@ -41,6 +41,7 @@ namespace CassandraDBtoCSharp
         private Session session;
         private string keySpaceName;
         private string outputDirectory;
+        private List<string> materializedViewNames;
         private string modelDirectory;
         private List<string> udtClasses = new List<string>();
         private SwaggerRoot swaggerRoot = new SwaggerRoot();
@@ -71,7 +72,11 @@ namespace CassandraDBtoCSharp
         private Dictionary<Cassandra.ColumnTypeCode, Func<ColumnDescOrTableColumn, string>> cassandraToCSharpTypeEquivalency;
         private bool isFrozen = false;
 
-        public CSharpGeneratorFromCassandraDB(string connectionStringOrLocalSettingsJsonFile, string keySpaceName, string outputDirectory)
+        public CSharpGeneratorFromCassandraDB(
+            string connectionStringOrLocalSettingsJsonFile, 
+            string keySpaceName, 
+            string outputDirectory,
+            List<string> materializedViewNames)
         {
             this.session = Utils.CassandraUtils.OpenCassandraSession(connectionStringOrLocalSettingsJsonFile);
             this.swaggerRoot.Definitions = new Dictionary<string, Schema>();
@@ -80,6 +85,7 @@ namespace CassandraDBtoCSharp
             this.swaggerRoot.Paths = new Dictionary<string, PathItem>();
             this.keySpaceName = keySpaceName;
             this.outputDirectory = outputDirectory;
+            this.materializedViewNames = materializedViewNames;
             Utils.Utils.CreateDirectoryIfNeeded(this.outputDirectory);
             this.modelDirectory = Path.Combine(outputDirectory, "Model");
             Utils.Utils.CreateDirectoryIfNeeded(this.modelDirectory);
@@ -124,50 +130,72 @@ namespace CassandraDBtoCSharp
             var tables = session.Cluster.Metadata.GetTables(this.keySpaceName.ToLowerInvariant()).ToList();
             var keySpace = session.Cluster.Metadata.GetKeyspace(this.keySpaceName.ToLowerInvariant());
 
-            log.Add($"Starting generation, {tables.Count} tables.");
+            Utils.Utils.WriteLineGreen($"\nStarting generation, {tables.Count} tables.");
             foreach (var tableName in tables)
             {
-                var tableDef = session.Cluster.Metadata.GetTable(this.keySpaceName.ToLowerInvariant(), tableName);
-                var columnDescriptions = new List<Utils.ColumnDescription>();
-                var className = Utils.Utils.CSharpifyName(tableDef.Name);
-                this.swaggerRoot.Definitions.Add(className, new Schema());
-                log.Add($" Starting table {tableDef.Name}, class {className}");
-                var properties = new List<string> { "" };
+                var tableDef = (DataCollectionMetadata)session.Cluster.Metadata.GetTable(this.keySpaceName.ToLowerInvariant(), tableName);
+                CreateCS(keySpace, tableDef);
+            }
 
-                foreach (var tableColumn in tableDef.TableColumns)
+            if (this.materializedViewNames.Count > 0)
+            {
+                Utils.Utils.WriteLineGreen($"\nStarting generation, {this.materializedViewNames.Count} materialized views.");
+                foreach (var materializedViewName in this.materializedViewNames)
                 {
-                    this.isFrozen = false;
-                    log.Add($" Table {tableDef.Name}, class {className}, column {tableColumn.Name}");
-
-                    var csharpTypeName = this.GetCSharpTypeName(tableColumn);
-
-                    if (csharpTypeName != null)
+                    var viewDef = (DataCollectionMetadata)session.Cluster.Metadata.GetMaterializedView(this.keySpaceName.ToLowerInvariant(), materializedViewName);
+                    if (viewDef != null)
                     {
-                        AddProperty(tableDef, columnDescriptions, properties, tableColumn, csharpTypeName);
+                        CreateCS(keySpace, viewDef);
                     }
                     else
                     {
-                        log.Add($" Table {tableDef.Name}, class {className}, column {tableColumn.Name}: DON'T KNOW HOW TO HANDLE TYPE {tableColumn.TypeCode}");
+                        Utils.Utils.WriteLineYellow($"Could not find materialized view {materializedViewName}.");
                     }
                 }
-                PopulateIsIndexField(columnDescriptions, tableDef);
-                this.CreateCSFile(
-                    className,
-                    properties,
-                    "using Cassandra.Mapping.Attributes;",
-                    $@"[Table(""{tableDef.Name}"", Keyspace = ""{keySpace.Name}"" )]");
-                this.typeDescriptions.Add(
-                    new Utils.TypeDescription
-                    {
-                        CassandraTableName = tableDef.Name,
-                        CSharpName = className,
-                        ColumnDescriptions = columnDescriptions
-                    });
             }
             this.CreateUdtTypeInitializerClass();
             this.CreateSwaggerJson();
             this.CreateTypeDescriptionJson();
             //File.WriteAllText(Path.Combine(this.outputDirectory, this.keySpaceName + ".csproj"), this.csproj);
+        }
+
+        private void CreateCS(KeyspaceMetadata keySpace, DataCollectionMetadata tableDef)
+        {
+            var columnDescriptions = new List<Utils.ColumnDescription>();
+            var className = Utils.Utils.CSharpifyName(tableDef.Name);
+            this.swaggerRoot.Definitions.Add(className, new Schema());
+            Utils.Utils.WriteLineGreen($" Starting table {tableDef.Name}, class {className}");
+            var properties = new List<string> { "" };
+
+            foreach (var tableColumn in tableDef.TableColumns)
+            {
+                this.isFrozen = false;
+                Utils.Utils.WriteLineGreen($" Table {tableDef.Name}, class {className}, column {tableColumn.Name}");
+
+                var csharpTypeName = this.GetCSharpTypeName(tableColumn);
+
+                if (csharpTypeName != null)
+                {
+                    AddProperty(tableDef, columnDescriptions, properties, tableColumn, csharpTypeName);
+                }
+                else
+                {
+                    Utils.Utils.WriteLineGreen($" Table {tableDef.Name}, class {className}, column {tableColumn.Name}: DON'T KNOW HOW TO HANDLE TYPE {tableColumn.TypeCode}");
+                }
+            }
+            PopulateIsIndexField(columnDescriptions, tableDef);
+            this.CreateCSFile(
+                className,
+                properties,
+                "using Cassandra.Mapping.Attributes;",
+                $@"[Table(""{tableDef.Name}"", Keyspace = ""{keySpace.Name}"" )]");
+            this.typeDescriptions.Add(
+                new Utils.TypeDescription
+                {
+                    CassandraTableName = tableDef.Name,
+                    CSharpName = className,
+                    ColumnDescriptions = columnDescriptions
+                });
         }
 
         private void CreateSwaggerJson()
@@ -218,22 +246,26 @@ namespace CassandraDBtoCSharp
             return null;
         }
 
-        private void PopulateIsIndexField(List<ColumnDescription> columnDescriptions, TableMetadata tableDef)
+        private void PopulateIsIndexField(List<ColumnDescription> columnDescriptions, DataCollectionMetadata dataCollectionDef)
         {
-            foreach (var index in tableDef.Indexes)
+            var tableDef = dataCollectionDef as TableMetadata;
+            if (tableDef != null)
             {
-                var indexedPropertyName = Utils.Utils.CSharpifyName(index.Value.Target);
-                var indexedProperty = columnDescriptions.FirstOrDefault(c => c.CSharpName == indexedPropertyName);
-
-                if (indexedProperty != null)
+                foreach (var index in tableDef.Indexes)
                 {
-                    indexedProperty.IsIndex = true;
+                    var indexedPropertyName = Utils.Utils.CSharpifyName(index.Value.Target);
+                    var indexedProperty = columnDescriptions.FirstOrDefault(c => c.CSharpName == indexedPropertyName);
+
+                    if (indexedProperty != null)
+                    {
+                        indexedProperty.IsIndex = true;
+                    }
                 }
             }
         }
 
         private void AddProperty(
-            TableMetadata tableDef,
+            DataCollectionMetadata tableDef,
             List<Utils.ColumnDescription> columnDescriptions,
             List<string> properties,
             TableColumn tableColumn,
@@ -331,7 +363,7 @@ namespace Webapp.Model
 }}";
             var classFileName = Path.Combine(this.modelDirectory, className + ".cs");
             File.WriteAllText(classFileName, classDefinition);
-            log.Add($"Created {classFileName}");
+            Utils.Utils.WriteLineGreen($"Created {classFileName}\n");
         }
 
         private string GetListTypeName(ColumnDescOrTableColumn tableColumn)

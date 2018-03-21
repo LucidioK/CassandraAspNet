@@ -1,0 +1,25 @@
+﻿{
+  "CassandraSettings": {
+    "Hosts": [
+      {
+        "HostName": "10.128.42-204",
+        "IpAddress": "10.128.42.204"
+      },
+      {
+        "HostName": "10.128.42-114",
+        "IpAddress": "10.128.42.114"
+      },
+      {
+        "IpAddress": "10.128.45.50"
+      }
+    ],
+    "Port": 9042,
+    "ClusterUser": "cassandra_dev",
+    "ClusterPassword": "Electric-Camel-76",
+    "ConsistencyLevel": "Quorum",
+    "UseClusterCredentials": true,
+    "UseSSL": false,
+    "UseQueryOptions": true,
+    "MaxConnectionsPerHost": 1000
+  }
+}

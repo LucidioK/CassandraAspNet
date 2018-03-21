@@ -2,7 +2,7 @@
   "profiles": {
     "CassandraDBtoCSharp": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\dsv\\payment\\src\\localConfiguration.json microservices c:\\Temp\\microservices"
+      "commandLineArgs": "C:\\dsv\\authentication\\src\\localConfiguration.json selfservice_auth c:\\Temp\\selfservice_auth user_auth_by_name user_by_bp"
     }
   }
 }
