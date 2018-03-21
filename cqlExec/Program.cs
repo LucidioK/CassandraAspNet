@@ -1,6 +1,8 @@
 ﻿using Cassandra;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -31,32 +33,29 @@ The configuration is defined in file localConfiguration.json, at the same direct
             var session = OpenCassandraSessionFromLocalSettings("localConfiguration.json");
 
             var rowSet = session.Execute(args[0]);
-            bool firstCol = true;
-            foreach (var col in rowSet.Columns)
-            {
-                if (!firstCol)
-                {
-                    Console.Write("|");
-                }
-                Console.Write(col.Name);
-                firstCol = false;
-            }
-            Console.WriteLine();
+            var columnNames = rowSet.Columns.Select(c => c.Name).ToArray();
+            var rowSetForJson = new List<object>();
             foreach (var row in rowSet)
             {
-                firstCol = true;
-                foreach (var col in row)
+                dynamic jsonRow = new ExpandoObject();
+                for (int i = 0; i < row.Count(); i++)
                 {
-                    if (!firstCol)
-                    {
-                        Console.Write("|");
-                    }
-                    Console.Write(col.ToString());
-                    firstCol = false;
+                    AddExpandoProperty(jsonRow, columnNames[i], row[i]);
                 }
-                Console.WriteLine();
+                rowSetForJson.Add(jsonRow);
             }
+            var json = JsonConvert.SerializeObject(rowSetForJson, Formatting.Indented);
+            Console.WriteLine(json);
+        }
 
+        public static void AddExpandoProperty(ExpandoObject expando, string propertyName, object propertyValue)
+        {
+            // ExpandoObject supports IDictionary so we can extend it like this
+            var expandoDict = expando as IDictionary<string, object>;
+            if (expandoDict.ContainsKey(propertyName))
+                expandoDict[propertyName] = propertyValue;
+            else
+                expandoDict.Add(propertyName, propertyValue);
         }
 
         public static Session OpenCassandraSessionFromLocalSettings(string localSettingsJsonFile)
