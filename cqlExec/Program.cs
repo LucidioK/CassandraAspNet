@@ -29,8 +29,9 @@ The configuration is defined in file localConfiguration.json, at the same direct
 ");
                 Environment.Exit(1);
             }
+            var configFilepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "localConfiguration.json");
 
-            var session = OpenCassandraSessionFromLocalSettings("localConfiguration.json");
+            var session = OpenCassandraSessionFromLocalSettings(configFilepath);
 
             var rowSet = session.Execute(args[0]);
             var columnNames = rowSet.Columns.Select(c => c.Name).ToArray();
