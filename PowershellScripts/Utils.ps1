@@ -252,7 +252,7 @@ function global:GetClassesFromSwaggerJson([string]$swaggerFile)
     [string]$classes = "";
     foreach ($class in $classList)
     {
-        if ($classes.Length > 0)
+        if ($classes.Length -gt 0)
         {
             $classes = ($classes + ',');
         }
