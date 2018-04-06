@@ -1,0 +1,6 @@
+{
+	"loadBalancerUrl": "http://internal-ci-dev-alb-478417170.us-west-2.elb.amazonaws.com",
+	"defaultUserName": "donaldmcconnell",
+	"defaultPassword": "Start@123",
+	"mcfServer"      : "https://10.41.53.54:8001"
+}

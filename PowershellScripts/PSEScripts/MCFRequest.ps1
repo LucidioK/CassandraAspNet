@@ -1,15 +1,16 @@
 ﻿# Usage example:
 # $r=.\MCFRequest.ps1 -URI "https://10.41.53.54:8001/sap/opu/odata/sap/ZERP_UTILITIES_UMC_PSE_SRV/ContractAccounts" -UserName 'testbillduedate1'
+
 param(
-    [parameter(Mandatory=$False, Position=0)][string]$URI = "https://10.41.53.54:8001/sap/opu/odata/sap/ZERP_UTILITIES_UMC_PSE_SRV/ContractAccounts('200009468303')/BudgetBilling",
+    [parameter(Mandatory=$False, Position=0)][string]$URI = "$(GetConfig.ps1 'mcfServer')/sap/opu/odata/sap/ZERP_UTILITIES_UMC_PSE_SRV/ContractAccounts('200009468303')/BudgetBilling",
     [parameter(Mandatory=$False, Position=1)][string]$Method = "GET",
     [parameter(Mandatory=$False, Position=2)][string]$Body = '{"tee":"hee", "moo":"boo"}',
-    [parameter(Mandatory=$False, Position=3)][string]$JWTUri  = 'http://internal-ci-dev-alb-962991584.us-west-2.elb.amazonaws.com/v1.0/authentication/signin',
-    [parameter(Mandatory=$False, Position=4)][string]$CookiesUri='http://internal-ci-dev-alb-962991584.us-west-2.elb.amazonaws.com/v1.0/authentication/mcf-token',
-    [parameter(Mandatory=$False, Position=5)][string]$UserName = 'testuserbbDev6',#'testuserpaDev1',#"testuser6",
-    [parameter(Mandatory=$False, Position=6)][string]$Password = 'Start@123',
-    [parameter(Mandatory=$False, Position=7)][string][ValidateSet('Basic','Bearer',$null)]$AuthorizationType = $null,
-    [parameter(Mandatory=$False, Position=8)][switch]$ReturnAsJson = $true
+    [parameter(Mandatory=$False, Position=3)][string]$JWTUri  = "$(GetConfig.ps1 'loadBalancerUrl')/v1.0/authentication/signin",
+    [parameter(Mandatory=$False, Position=4)][string]$CookiesUri="$(GetConfig.ps1 'loadBalancerUrl')/v1.0/authentication/mcf-token",
+    [parameter(Mandatory=$False, Position=5)][string]$UserName = "$(GetConfig.ps1 'defaultUserName')",#'testuserpaDev1',#"testuser6",
+    [parameter(Mandatory=$False, Position=6)][string]$Password = "$(GetConfig.ps1 'defaultPassword')",
+#    [parameter(Mandatory=$False, Position=7)][string][ValidateSet('Basic','Bearer',$null)]$AuthorizationType = $null,
+    [parameter(Mandatory=$False, Position=7)][switch]$ReturnAsJson = $true
 )
 
 function HeadersForGet($cookies = @{})
@@ -138,7 +139,7 @@ $global:jwt=$jwt;
 Write-Host $jwt -ForegroundColor DarkGreen
 
 $cookies  = GetCookies $CookiesUri $jwt;
-Write-Host $cookies -ForegroundColor DarkGreen
+Write-Host ($cookies | ConvertTo-Json) -ForegroundColor DarkGreen
 
 $Method  = $Method.ToUpperInvariant();
 $response = $null;

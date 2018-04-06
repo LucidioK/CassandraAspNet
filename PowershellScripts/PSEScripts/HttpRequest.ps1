@@ -1,9 +1,9 @@
 ﻿
 
 param(
-    [parameter(Mandatory=$False, Position=0)][string]$Uri = "http://internal-ci-test-alb-2000422376.us-west-2.elb.amazonaws.com/v1.0/account/220007375482/budget-bill",
-    [parameter(Mandatory=$False, Position=1)][string]$UserName = "donaldmcconnell",
-    [parameter(Mandatory=$False, Position=2)][string]$Password = "Start@123",
+    [parameter(Mandatory=$False, Position=0)][string]$Uri = "$(GetConfig.ps1 'loadBalancerUrl')/v1.0/account/220007375482/budget-bill",
+    [parameter(Mandatory=$False, Position=1)][string]$UserName = "$(GetConfig.ps1 'defaultUserName')",
+    [parameter(Mandatory=$False, Position=2)][string]$Password = "$(GetConfig.ps1 'defaultPassword')",
     [parameter(Mandatory=$False, Position=3)][string]$Method = "GET",
     [parameter(Mandatory=$False, Position=4)][string]$Body = '{"tee":"hee", "moo":"boo"}',
     [parameter(Mandatory=$False, Position=5)][string]$AuthType = 'Basic' # or 'Bearer' or 'None' or 'Cookies'
@@ -14,15 +14,15 @@ if ($AuthType.ToUpperInvariant() -ne 'BASIC' -and $AuthType.ToUpperInvariant() -
     throw "AuthType must be None, Basic, Cookie or Bearer, but it was provided $AuthType";
 }
 
-function getMcfJWToken($UserName = 'testuserbbdev6',$Password = 'Start@123', $Uri  = 'http://internal-ci-dev-alb-962991584.us-west-2.elb.amazonaws.com/v1.0/authentication/signin')
+function getMcfJWToken($UserName = "$(GetConfig.ps1 'defaultUserName')",$Password = "$(GetConfig.ps1 'defaultPassword')", $Uri  = "$(GetConfig.ps1 'loadBalancerUrl')/v1.0/authentication/signin")
 {
 
     $response = $null;
     $headers = @{};
     $headers.Add('Accept','application/json');
-    $headers.Add('Origin', 'http://internal-ci-dev-alb-962991584.us-west-2.elb.amazonaws.com');
+    $headers.Add('Origin', "$(GetConfig.ps1 'loadBalancerUrl')");
     $headers.Add('Content-Type','application/json-patch+json');
-    $headers.Add('Referer', 'http://internal-ci-dev-alb-962991584.us-west-2.elb.amazonaws.com/swagger/authentication/');
+    $headers.Add('Referer', "$(GetConfig.ps1 'loadBalancerUrl')/swagger/authentication/");
     $headers.Add('Accept-Encoding','gzip, deflate');
     $headers.Add('Accept-Language','en-US,en;q=0.9');
 
@@ -36,11 +36,11 @@ function getMcfJWToken($UserName = 'testuserbbdev6',$Password = 'Start@123', $Ur
 }
 
 
-function injectCookies($headersOut, [string]$username, [string]$password, [string]$uri  = 'http://internal-ci-dev-alb-962991584.us-west-2.elb.amazonaws.com/v1.0/authentication/signin')
+function injectCookies($headersOut, [string]$username, [string]$password)
 {
 
     [string]$jwt=getMcfJWToken $username $password ;
-    $uri='http://internal-ci-dev-alb-962991584.us-west-2.elb.amazonaws.com/v1.0/authentication/mcf-token';
+    $uri="$(GetConfig.ps1 'loadBalancerUrl')/v1.0/authentication/mcf-token";
     $headers = @{};
     $headers.Add('Accept','application/json');
     $headers.Add('Content-Type','application/json-patch+json');
@@ -82,7 +82,6 @@ $global:response=$null;
 $Method = $Method.ToUpperInvariant();
 
 $headers.Add('Accept','application/json');
-#$headers.Add('Origin', 'http://internal-ci-dev-alb-962991584.us-west-2.elb.amazonaws.com');
 $headers.Add('Content-Type','application/json-patch+json');
 $headers.Add('Accept-Encoding','gzip, deflate');
 $headers.Add('Accept-Language','en-US,en;q=0.9');

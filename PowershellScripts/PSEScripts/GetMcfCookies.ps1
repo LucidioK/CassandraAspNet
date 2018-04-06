@@ -1,10 +1,10 @@
 ﻿param(
-    [parameter(Mandatory=$False, Position=0)][string]$UserName = 'testuserbbdev6',#'testuserpaDev1',#"testuser6",
-    [parameter(Mandatory=$False, Position=1)][string]$Password = 'Start@123',
-    [parameter(Mandatory=$False, Position=2)][string]$Uri  = 'http://internal-ci-dev-alb-962991584.us-west-2.elb.amazonaws.com/v1.0/authentication/signin'
+    [parameter(Mandatory=$False, Position=0)][string]$UserName = "$(GetConfig.ps1 'defaultUserName')",#'testuserpaDev1',#"testuser6",
+    [parameter(Mandatory=$False, Position=1)][string]$Password = "$(GetConfig.ps1 'defaultPassword')",
+    [parameter(Mandatory=$False, Position=2)][string]$Uri  = "$(GetConfig.ps1 'loadBalancerUrl')/v1.0/authentication/signin"
 )
 [string]$jwt=&(join-path $PSScriptRoot 'GetMcfJWToken.ps1') -UserName $UserName -Password $Password -Uri $Uri;
-$uri='http://internal-ci-dev-alb-962991584.us-west-2.elb.amazonaws.com/v1.0/authentication/mcf-token';
+$uri="$(GetConfig.ps1 'loadBalancerUrl')/v1.0/authentication/mcf-token";
 $headers = @{};
 $headers.Add('Accept','application/json');
 #$headers.Add('Origin', 'http://internal-ci-dev-alb-962991584.us-west-2.elb.amazonaws.com');

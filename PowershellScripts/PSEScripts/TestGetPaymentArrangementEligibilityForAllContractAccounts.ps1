@@ -1,6 +1,6 @@
 ﻿param(
-    [parameter(Mandatory=$False, Position=2)][string]$UserName = "hansrcooke",
-    [parameter(Mandatory=$False, Position=3)][string]$Password = 'Start@123'
+    [parameter(Mandatory=$False, Position=0)][string]$UserName = "$(GetConfig.ps1 'defaultUserName')",
+    [parameter(Mandatory=$False, Position=1)][string]$Password = "$(GetConfig.ps1 'defaultPassword')"
 )
 
 
